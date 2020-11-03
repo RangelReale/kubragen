@@ -1,3 +1,4 @@
+import pathlib
 import re
 
 import setuptools
@@ -6,6 +7,9 @@ __version__ = re.search(
     r'__version__\s*=\s*[\'"]([^\'"]*)[\'"]',  # It excludes inline comment too
     open('kubragen/__init__.py', encoding='utf_8_sig').read()
     ).group(1)
+
+HERE = pathlib.Path(__file__).parent
+INSTALL_REQUIRES = (HERE / "requirements.txt").read_text().splitlines()
 
 with open("README.md", "r") as fh:
     long_description = fh.read()
@@ -20,6 +24,7 @@ setuptools.setup(
     long_description_content_type="text/markdown",
     url="https://github.com/RangelReale/kubragen",
     packages=setuptools.find_packages(),
+    install_requires=INSTALL_REQUIRES,
     test_suite="tests",
     classifiers=[
         "Programming Language :: Python :: 3",
