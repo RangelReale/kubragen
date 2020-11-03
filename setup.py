@@ -19,7 +19,7 @@ setuptools.setup(
     version=__version__,
     author="Rangel Reale",
     author_email="rangelspam@gmail.com",
-    description="A small example package",
+    description="KubraGen: programmatic Kubernetes YAML generator",
     long_description=long_description,
     long_description_content_type="text/markdown",
     url="https://github.com/RangelReale/kubragen",
