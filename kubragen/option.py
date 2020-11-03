@@ -50,7 +50,7 @@ class OptionDef(Option):
     :param flags: Option flags (See :class:`OptionDefFlags`)
     :param format: Option format (See :class:`OptionDefFormat`)
     :param allowed_types: a list of allowed types, to be checked with :func:`isinstance`.
-        If *None*, no type check is made. If :param:`required` is False, :class:`None` is
+        If *None*, no type check is made. If *required* is False, :class:`None` is
         automatically allowed.
     """
     required: bool

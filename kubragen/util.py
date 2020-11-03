@@ -58,16 +58,15 @@ def type_name(t) -> str:
     return getattr(t, '__name__', repr(t))
 
 
-def is_allowed_types(value: Any, allowed_types: Optional[Sequence[Any]], required: Optional[bool] = None):
+def is_allowed_types(value: Any, allowed_types: Optional[Sequence[Any]], required: Optional[bool] = None) -> bool:
     """
     Check whether the type of value is in the allowed types.
+
     :param value: the value to check the type of
     :param allowed_types: a list of allowed types, to be checked with :func:`isinstance`.
         If *None*, no type check is made.
-    :return:
+    :return: whether the type is allowed
     """
-    # if required is not None and required is False and value is None:
-    #     return True
     if value is None and required is not None:
         return not required
     if allowed_types is None:
