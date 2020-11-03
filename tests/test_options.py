@@ -2,6 +2,7 @@ import unittest
 from typing import Optional, Any
 
 from kubragen.exception import OptionError
+from kubragen.helper import LiteralStr, HelperStr
 from kubragen.option import OptionDef, OptionRoot, OptionDefaultValue, OptionValue, Option, OptionValueCallable
 from kubragen.options import Options, option_root_get
 
@@ -82,6 +83,22 @@ class TestOptions(unittest.TestCase):
                 }
             })
             option_root_get(opt, 'foo.bar')
+
+    def test_options_helper(self):
+        class TOption(Options):
+            def define_options(self) -> Optional[Any]:
+                return {
+                    'foo': {
+                        'bar': OptionDef(default_value='baz'),
+                    }
+                }
+
+        opt = TOption({
+            'foo': {
+                'bar': LiteralStr('baz_literal'),
+            }
+        })
+        self.assertIsInstance(option_root_get(opt, 'foo.bar'), HelperStr)
 
     def test_options_value(self):
         class TOptionValue(OptionValue):
