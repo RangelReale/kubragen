@@ -1,0 +1,4 @@
+sphinx
+wheel
+sphinx-rtd-theme
+m2r2

@@ -1,0 +1,207 @@
+# KubraGen: programmatic Kubernetes YAML generator
+
+[![PyPI version](https://img.shields.io/pypi/v/kubragen.svg)](https://pypi.python.org/pypi/kubragen/)
+[![Supported Python versions](https://img.shields.io/pypi/pyversions/kubragen.svg)](https://pypi.python.org/pypi/kubragen/)
+
+## Overview
+
+KubraGen is a Kubernetes YAML generator library that makes it possible to generate
+configurations using the full power of the Python programming language.
+
+Using plugins (called Builders), it is possible to include libraries that know how to configure
+specific services, like Prometheus, RabbitMQ, Traefik, etc.
+
+The *jsonpatchext* library (an extension of *jsonpatch*) is used to make it possible to check and modify the output
+objects in any way without accessing the returned dicts directly, including merging dicts with the *deepmerge* 
+library.
+
+See source code for examples
+
+* Website: https://github.com/RangelReale/kubragen
+* Repository: https://github.com/RangelReale/kubragen.git
+* Documentation: https://kubragen.readthedocs.org/
+* PyPI: https://pypi.python.org/pypi/kubragen
+
+## Example
+
+```python
+kg = KubraGen(provider=Provider(PROVIDER_GOOGLE, PROVIDERSVC_GOOGLE_GKE), options=Options({
+    'namespaces': {
+        'default': 'app-default',
+        'monitoring': 'app-monitoring',
+    },
+}))
+
+out = OutputProject(kg)
+
+shell_script = OutputFile_ShellScript('create_gke.sh')
+out.append(shell_script)
+
+shell_script.append('set -e')
+
+#
+# OUTPUTFILE: app-namespace.yaml
+#
+file = OutputFile_Kubernetes('app-namespace.yaml')
+
+file.append(FilterJSONPatches_Apply([
+    Object({
+        'apiVersion': 'v1',
+        'kind': 'Namespace',
+        'metadata': {
+            'name': 'app-default',
+            'annotations': {
+                'will-not-output': ValueData(value='anything', enabled=False),
+            }
+        },
+    }, name='ns-default', source='app'), Object({
+        'apiVersion': 'v1',
+        'kind': 'Namespace',
+        'metadata': {
+            'name': 'app-monitoring',
+        },
+    }, name='ns-monitoring', source='app'),
+], jsonpatches=[
+    FilterJSONPatch(names=['ns-monitoring'], patches=[
+        {'op': 'add', 'path': '/metadata/annotations', 'value': {
+                'kubragen.github.io/patches': QuotedStr('true'),
+        }},
+    ])
+]))
+
+shell_script.append(OD_FileTemplate(f'kubectl apply -f ${{FILE_{file.fileid}}}'))
+
+shell_script.append(f'kubectl config set-context --current --namespace=app-default')
+
+#
+# OUTPUTFILE: rabbitmq-config.yaml
+#
+kg_rabbit = RabbitMQBuilder(kubragen=kg, options=RabbitMQOptions({
+    'namespace': OptionRoot('namespaces.monitoring'),
+    'basename': 'myrabbit',
+    'config': {
+        'erlang_cookie': KData_Secret(secretName='app-global-secrets', secretData='erlang_cookie'),
+        'enable_prometheus': True,
+        'prometheus_annotation': True,
+        'authorization': {
+            'serviceaccount_create': True,
+            'roles_create': True,
+            'roles_bind': True,
+        },
+    },
+    'kubernetes': {
+        'volumes': {
+            'data': {
+                'persistentVolumeClaim': {
+                    'claimName': 'rabbitmq-storage-claim'
+                }
+            }
+        },
+        'resources': {
+            'statefulset': {
+                'requests': {
+                    'cpu': '150m',
+                    'memory': '300Mi'
+                },
+                'limits': {
+                    'cpu': '300m',
+                    'memory': '450Mi'
+                },
+            },
+        },
+    }
+})).jsonpatches([
+    FilterJSONPatch(names=[RabbitMQBuilder.BUILDITEM_SERVICE], patches=[
+        {'op': 'check', 'path': '/spec/ports/0/name', 'cmp': 'equals', 'value': 'http'},
+        {'op': 'replace', 'path': '/spec/type', 'value': 'LoadBalancer'},
+    ]),
+])
+
+kg_rabbit.ensure_build_names(kg_rabbit.BUILD_ACCESSCONTROL, kg_rabbit.BUILD_CONFIG,
+                              kg_rabbit.BUILD_SERVICE)
+
+#
+# OUTPUTFILE: rabbitmq-config.yaml
+#
+file = OutputFile_Kubernetes('rabbitmq-config.yaml')
+out.append(file)
+
+file.append(kg_rabbit.build(kg_rabbit.BUILD_ACCESSCONTROL, kg_rabbit.BUILD_CONFIG))
+
+shell_script.append(OD_FileTemplate(f'kubectl apply -f ${{FILE_{file.fileid}}}'))
+
+#
+# OUTPUTFILE: rabbitmq.yaml
+#
+file = OutputFile_Kubernetes('rabbitmq.yaml')
+out.append(file)
+
+file.append(kg_rabbit.build(kg_rabbit.BUILD_SERVICE))
+
+shell_script.append(OD_FileTemplate(f'kubectl apply -f ${{FILE_{file.fileid}}}'))
+
+out.output(OutputDriver_Print())
+# out.output(OutputDriver_Directory('/tmp/app-gke'))
+```
+
+Output:
+
+```text
+****** BEGIN FILE: 001-app-namespace.yaml ********
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: app-default
+  annotations: {}
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: app-monitoring
+  annotations:
+    kubragen.github.io/patches: 'true'
+****** END FILE: 001-app-namespace.yaml ********
+****** BEGIN FILE: 002-rabbitmq-config.yaml ********
+kind: Role
+apiVersion: rbac.authorization.k8s.io/v1beta1
+metadata:
+  name: myrabbit
+  namespace: app-monitoring
+<...more...>
+****** END FILE: 002-rabbitmq-config.yaml ********
+****** BEGIN FILE: 003-rabbitmq.yaml ********
+apiVersion: v1
+kind: Service
+metadata:
+  name: myrabbit-headless
+  namespace: app-monitoring
+spec:
+<...more...>
+****** END FILE: 003-rabbitmq.yaml ********
+****** BEGIN FILE: create_gke.sh ********
+#!/bin/bash
+
+set -e
+kubectl apply -f 001-app-namespace.yaml
+kubectl config set-context --current --namespace=app-default
+kubectl apply -f 002-rabbitmq-config.yaml
+kubectl apply -f 003-rabbitmq.yaml
+
+****** END FILE: create_gke.sh ********
+```
+
+## Design Philosophy
+
+* As the generated Kubernetes files can have critical consequences, the library is designed to fail on the minimal
+possibility of error, and also gives tools to users of the library to check any generated value for critical
+options, using the *jsonpatchext* library to check the data output by the builders.
+
+* To minimize the use of dict concatenation, a special type *kubragen.data.Data* can be used anywhere in the object,
+and it has a *is_enabled()* method that removes the value (and its key if it is contained in a dict/list)
+if it returns False.
+
+* Only YAML is supported by the library, it is not possible to generate JSON directly at the moment.
+
+## Author
+
+Rangel Reale (rangelspam@gmail.com)

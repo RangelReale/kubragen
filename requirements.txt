@@ -1,0 +1,5 @@
+semver>=2.13.0
+PyYAML>=5.3.1
+requests>=2.24.0
+jsonpatchext>=1.32
+deepmerge>=0.1
