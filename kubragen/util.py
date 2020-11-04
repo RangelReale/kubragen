@@ -1,4 +1,4 @@
-from typing import Mapping, Any, Sequence, Optional
+from typing import Mapping, Any, Sequence, Optional, MutableMapping
 
 from .exception import OptionError
 
@@ -31,6 +31,20 @@ def dict_get_value(dict: Mapping, name: str) -> Any:
             raise OptionError('Could not find option "{}"'.format(name))
         current_data = current_data.get(chunk, {})
     return current_data
+
+
+def dict_flatten(d, parent_key='', sep='.') -> Mapping:
+    """
+    Flatten a dict to a single level.
+    """
+    items = []
+    for k, v in d.items():
+        new_key = parent_key + sep + k if parent_key else k
+        if isinstance(v, MutableMapping):
+            items.extend(dict_flatten(v, new_key, sep=sep).items())
+        else:
+            items.append((new_key, v))
+    return dict(items)
 
 
 def urljoin(*args: str) -> str:

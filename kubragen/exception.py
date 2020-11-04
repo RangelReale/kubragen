@@ -10,6 +10,10 @@ class NotFoundError(KGException):
     pass
 
 
+class NotSupportedError(KGException):
+    pass
+
+
 class InvalidNameError(KGException):
     pass
 

@@ -1,4 +1,4 @@
-from typing import Any, Optional, Tuple
+from typing import Any, Optional, Tuple, Protocol
 
 from .data import Data
 from .exception import OptionError
@@ -102,3 +102,19 @@ def option_root_get(options: Options, name: str, root_options: Optional[Options]
                 ))
 
     return value
+
+
+class OptionGetter(Protocol):
+    """
+    Protocol for option getters
+    """
+    def option_get(self, name: str) -> Any:
+        """
+        Get an option value.
+
+        :param name: the option name in dot format (config.service_port)
+        :return: the option value
+        :raises: :class:`kubragen.exception.OptionError`
+        :raises: :class:`kubragen.exception.TypeError`
+        """
+        ...

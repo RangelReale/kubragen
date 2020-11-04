@@ -1,6 +1,6 @@
 from typing import Dict, List, TypeVar, Sequence, Optional, Any
 
-from . import KubraGen
+from .kubragen import KubraGen
 from .object import ObjectItem, Object
 from .exception import KGException, InvalidNameError, NotFoundError
 from .jsonpatch import FilterJSONPatches, FilterJSONPatches_Apply
@@ -22,7 +22,7 @@ class Builder:
         self._jsonpatches = None
         self._objectnames = {}
 
-    def option_get(self, name: str):
+    def option_get(self, name: str) -> Any:
         """
         Get an option value.
 
