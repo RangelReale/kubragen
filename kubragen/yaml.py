@@ -24,16 +24,11 @@ def YamlDumper(kg: KubraGen):
     return k
 
 
-class YamlDumperImpl(yaml.Dumper):
+class YamlDumperBase(yaml.Dumper):
     """
-    YAML dumper that takes KubraGen classes in account.
-
-    :param kg: the :class:`kubragen.kubragen.KubraGen` instance
+    YAML dumper that takes KubraGen HelperStr classes in account.
     """
-    kg: Optional[KubraGen]
-
-    def __init__(self, *args, kg: Optional[KubraGen] = None, **kwargs):
-        self.kg = kg
+    def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
         # https://stackoverflow.com/questions/51272814/python-yaml-dumping-pointer-references
@@ -45,13 +40,24 @@ class YamlDumperImpl(yaml.Dumper):
         self.add_representer(FoldedStr, represent_folded_str)
         self.add_representer(LiteralStr, represent_literal_str)
 
-        # KGValue_QuotedStr
-        def kgvaluequotedstr_representer(dumper: yaml.Dumper, data: QuotedStr):
-            if self.kg is not None:
-                if not self.kg.default_quoted_value_single():
-                    return represent_double_quoted_str(dumper, data)
-            return represent_single_quoted_str(dumper, data)
-        self.add_representer(QuotedStr, kgvaluequotedstr_representer)
+        # QuotedStr
+        self._init_quotedstr()
+
+    def _init_quotedstr(self):
+        self.add_representer(QuotedStr, represent_single_quoted_str)
+
+
+class YamlDumperImpl(YamlDumperBase):
+    """
+    YAML dumper that takes KubraGen classes in account.
+
+    :param kg: the :class:`kubragen.kubragen.KubraGen` instance
+    """
+    kg: Optional[KubraGen]
+
+    def __init__(self, *args, kg: Optional[KubraGen] = None, **kwargs):
+        self.kg = kg
+        super().__init__(*args, **kwargs)
 
         # KGObject
         def kgobject_representer(dumper: yaml.Dumper, data: Object):
@@ -88,6 +94,15 @@ class YamlDumperImpl(yaml.Dumper):
                 continue
             kgmapping[item_key] = item_value
         return super().represent_mapping(tag, kgmapping, flow_style=False)
+
+    def _init_quotedstr(self):
+        # QuotedStr
+        def kgvaluequotedstr_representer(dumper: yaml.Dumper, data: QuotedStr):
+            if self.kg is not None:
+                if not self.kg.default_quoted_value_single():
+                    return represent_double_quoted_str(dumper, data)
+            return represent_single_quoted_str(dumper, data)
+        self.add_representer(QuotedStr, kgvaluequotedstr_representer)
 
 
 class YamlGenerator:

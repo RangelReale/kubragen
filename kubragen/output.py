@@ -9,7 +9,7 @@ import yaml
 from .exception import KGException
 from .kubragen import KubraGen
 from .object import Object
-from .yaml import YamlGenerator
+from .yaml import YamlGenerator, YamlDumperBase
 
 
 class OutputData(str):
@@ -229,9 +229,9 @@ class OutputFile_Yaml(OutputFile):
             is_first = False
             if isinstance(d, dict) or isinstance(d, list) or isinstance(d, Object):
                 if isinstance(d, list):
-                    ret.append(yaml.dump_all(d, **yaml_dump_params))
+                    ret.append(yaml.dump_all(d, Dumper=YamlDumperBase, **yaml_dump_params))
                 else:
-                    ret.append(yaml.dump(d, **yaml_dump_params))
+                    ret.append(yaml.dump(d, Dumper=YamlDumperBase, **yaml_dump_params))
             else:
                 ret.append(dumper.dump(d))
         return '\n'.join(ret)

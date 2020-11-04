@@ -1,8 +1,11 @@
 from typing import Any, Tuple, Sequence, Mapping
 
+import yaml
+
 from kubragen.exception import NotSupportedError
 from kubragen.options import OptionGetter
 from kubragen.util import dict_flatten
+from kubragen.yaml import YamlDumperBase
 
 
 class ConfigFileOutput:
@@ -150,7 +153,7 @@ class ConfigFileRender_RawStr(ConfigFileRender):
 
 class ConfigFileRender_SysCtl(ConfigFileRender):
     """
-    Renderer that outputs a SysCtl file output.
+    Renderer that outputs a SysCtl file.
 
     SysCtl is ini-like without sections.
     """
@@ -175,4 +178,27 @@ class ConfigFileRender_SysCtl(ConfigFileRender):
     def render(self, value: ConfigFileOutput) -> str:
         if self.supports(value):
             return self.render_dict(value.value)
+        super().render(value)
+
+
+class ConfigFileRender_Yaml(ConfigFileRender):
+    """
+    Renderer that outputs a YAML file.
+    """
+    def render_yaml(self, value: Any) -> str:
+        yaml_dump_params = {'default_flow_style': None, 'sort_keys': False}
+        if isinstance(value, list):
+            return yaml.dump_all(value, Dumper=YamlDumperBase, **yaml_dump_params)
+        return yaml.dump(value, Dumper=YamlDumperBase, **yaml_dump_params)
+
+    def supports(self, value: ConfigFileOutput) -> bool:
+        if isinstance(value, ConfigFileOutput_DictSingleLevel) or \
+           isinstance(value, ConfigFileOutput_DictDualLevel) or \
+           isinstance(value, ConfigFileOutput_Dict):
+            return True
+        return super().supports(value)
+
+    def render(self, value: ConfigFileOutput) -> str:
+        if self.supports(value):
+            return self.render_yaml(value.value)
         super().render(value)
