@@ -24,7 +24,24 @@ See source code for examples
 
 ## Example
 
+This example is purposeful convoluted to illustrate the many features of the library.
+
 ```python
+from kubragen import KubraGen
+from kubragen.consts import PROVIDER_GOOGLE, PROVIDERSVC_GOOGLE_GKE
+from kubragen.data import ValueData
+from kubragen.helper import QuotedStr
+from kubragen.jsonpatch import FilterJSONPatches_Apply, FilterJSONPatch, ObjectFilter
+from kubragen.kdata import KData_Secret
+from kubragen.object import Object
+from kubragen.option import OptionRoot
+from kubragen.options import Options
+from kubragen.output import OutputProject, OD_FileTemplate
+from kubragen.outputimpl import OutputFile_ShellScript, OutputFile_Kubernetes, OutputDriver_Print
+from kubragen.provider import Provider
+
+from kg_rabbitmq import RabbitMQBuilder, RabbitMQOptions
+
 kg = KubraGen(provider=Provider(PROVIDER_GOOGLE, PROVIDERSVC_GOOGLE_GKE), options=Options({
     'namespaces': {
         'default': 'app-default',
@@ -43,6 +60,7 @@ shell_script.append('set -e')
 # OUTPUTFILE: app-namespace.yaml
 #
 file = OutputFile_Kubernetes('app-namespace.yaml')
+out.append(file)
 
 file.append(FilterJSONPatches_Apply([
     Object({
@@ -62,7 +80,7 @@ file.append(FilterJSONPatches_Apply([
         },
     }, name='ns-monitoring', source='app'),
 ], jsonpatches=[
-    FilterJSONPatch(names=['ns-monitoring'], patches=[
+    FilterJSONPatch(filters=ObjectFilter(names=['ns-monitoring']), patches=[
         {'op': 'add', 'path': '/metadata/annotations', 'value': {
                 'kubragen.github.io/patches': QuotedStr('true'),
         }},
@@ -74,7 +92,7 @@ shell_script.append(OD_FileTemplate(f'kubectl apply -f ${{FILE_{file.fileid}}}')
 shell_script.append(f'kubectl config set-context --current --namespace=app-default')
 
 #
-# OUTPUTFILE: rabbitmq-config.yaml
+# SETUP: rabbitmq-config.yaml
 #
 kg_rabbit = RabbitMQBuilder(kubragen=kg, options=RabbitMQOptions({
     'namespace': OptionRoot('namespaces.monitoring'),
@@ -111,14 +129,14 @@ kg_rabbit = RabbitMQBuilder(kubragen=kg, options=RabbitMQOptions({
         },
     }
 })).jsonpatches([
-    FilterJSONPatch(names=[RabbitMQBuilder.BUILDITEM_SERVICE], patches=[
+    FilterJSONPatch(filters={'names': [RabbitMQBuilder.BUILDITEM_SERVICE]}, patches=[
         {'op': 'check', 'path': '/spec/ports/0/name', 'cmp': 'equals', 'value': 'http'},
         {'op': 'replace', 'path': '/spec/type', 'value': 'LoadBalancer'},
     ]),
 ])
 
 kg_rabbit.ensure_build_names(kg_rabbit.BUILD_ACCESSCONTROL, kg_rabbit.BUILD_CONFIG,
-                              kg_rabbit.BUILD_SERVICE)
+                             kg_rabbit.BUILD_SERVICE)
 
 #
 # OUTPUTFILE: rabbitmq-config.yaml
@@ -140,6 +158,9 @@ file.append(kg_rabbit.build(kg_rabbit.BUILD_SERVICE))
 
 shell_script.append(OD_FileTemplate(f'kubectl apply -f ${{FILE_{file.fileid}}}'))
 
+#
+# OUTPUT
+#
 out.output(OutputDriver_Print())
 # out.output(OutputDriver_Directory('/tmp/app-gke'))
 ```
@@ -160,13 +181,17 @@ metadata:
   name: app-monitoring
   annotations:
     kubragen.github.io/patches: 'true'
+
 ****** END FILE: 001-app-namespace.yaml ********
 ****** BEGIN FILE: 002-rabbitmq-config.yaml ********
-kind: Role
-apiVersion: rbac.authorization.k8s.io/v1beta1
+apiVersion: v1
+kind: ServiceAccount
 metadata:
   name: myrabbit
   namespace: app-monitoring
+---
+kind: Role
+apiVersion: rbac.authorization.k8s.io/v1beta1
 <...more...>
 ****** END FILE: 002-rabbitmq-config.yaml ********
 ****** BEGIN FILE: 003-rabbitmq.yaml ********
@@ -176,6 +201,7 @@ metadata:
   name: myrabbit-headless
   namespace: app-monitoring
 spec:
+  clusterIP: None
 <...more...>
 ****** END FILE: 003-rabbitmq.yaml ********
 ****** BEGIN FILE: create_gke.sh ********

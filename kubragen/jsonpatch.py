@@ -153,12 +153,12 @@ class FilterJSONPatch:
     patches: Sequence[Any]
     filters: Optional[Sequence[ObjectFilterType]]
 
-    def __init__(self, patches: Sequence[Any], filters: Optional[Union[Sequence[ObjectFilterType], ObjectFilterType]]):
-        self.patches = patches
+    def __init__(self, filters: Optional[Union[Sequence[ObjectFilterType], ObjectFilterType]], patches: Sequence[Any]):
         if filters is not None and not isinstance(filters, Sequence):
             self.filters = [filters]
         else:
             self.filters = filters
+        self.patches = patches
 
 
 FilterJSONPatches = Optional[Sequence[FilterJSONPatch]]
