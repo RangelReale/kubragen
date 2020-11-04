@@ -9,6 +9,7 @@ Modules
 
    mod-kubragen
    mod-builder
+   mod-configfile
    mod-consts
    mod-data
    mod-exception
@@ -21,7 +22,6 @@ Modules
    mod-option
    mod-options
    mod-output
-   mod-outputimpl
    mod-provider
    mod-types
    mod-util
