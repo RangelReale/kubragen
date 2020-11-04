@@ -126,7 +126,7 @@ def ObjectFilterCheck(object: ObjectItem, filters: Optional[Sequence[Any]]) -> b
 
 ObjectFilterType = Union[
     ObjectFilterBase,
-    Dict[str, Union[Sequence[str], str]],
+    Mapping[str, Union[Sequence[str], str]],
     Callable[[Any], bool]
 ]
 """

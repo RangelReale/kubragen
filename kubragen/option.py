@@ -55,12 +55,12 @@ class OptionDef(Option):
     """
     required: bool
     default_value: Optional[Any]
-    flags: List[OptionDefFlags]
+    flags: Sequence[OptionDefFlags]
     format: OptionDefFormat
     allowed_types: Optional[Sequence[Any]]
 
     def __init__(self, required: bool = False, default_value: Optional[Any] = None,
-                 flags: Optional[List[OptionDefFlags]] = None, format: OptionDefFormat = OptionDefFormat.ANY,
+                 flags: Optional[Sequence[OptionDefFlags]] = None, format: OptionDefFormat = OptionDefFormat.ANY,
                  allowed_types: Optional[Sequence[Any]] = None):
         self.required = required
         self.default_value = default_value

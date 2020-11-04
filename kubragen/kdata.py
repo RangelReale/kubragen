@@ -1,4 +1,4 @@
-from typing import List, Any
+from typing import Any, Sequence
 
 from .exception import InvalidParamError
 
@@ -8,7 +8,7 @@ class KData:
     pass
 
 
-def IsKData(value, allowed: List[Any] = None) -> bool:
+def IsKData(value, allowed: Sequence[Any] = None) -> bool:
     """
     Checks whether the value is a :class:`KData`, and optionally if it is one the allowed types.
 

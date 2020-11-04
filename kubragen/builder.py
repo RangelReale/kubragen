@@ -1,9 +1,9 @@
-from typing import Dict, List, TypeVar, Sequence, Optional, Any
+from typing import TypeVar, Sequence, Any, Mapping, Dict
 
-from .kubragen import KubraGen
-from .object import ObjectItem, Object
 from .exception import KGException, InvalidNameError, NotFoundError
 from .jsonpatch import FilterJSONPatches, FilterJSONPatches_Apply
+from .kubragen import KubraGen
+from .object import ObjectItem, Object
 from .types import TBuild, TBuildItem
 
 BuilderT = TypeVar('BuilderT', bound='Builder')
@@ -42,14 +42,14 @@ class Builder:
             raise NotFoundError('Object name "{}" not found'.format(obj))
         return self._objectnames[obj]
 
-    def object_names(self) -> Dict[str, str]:
+    def object_names(self) -> Mapping[str, str]:
         return self._objectnames
 
-    def object_names_update(self, names: Dict[str, str]) -> BuilderT:
+    def object_names_update(self, names: Mapping[str, str]) -> BuilderT:
         self._objectnames.update(names)
         return self
 
-    def object_names_change(self, names: Dict[str, str]) -> BuilderT:
+    def object_names_change(self, names: Mapping[str, str]) -> BuilderT:
         for name, value in names.items():
             if name not in self._objectnames:
                 raise InvalidNameError('Unknown object name "{}"'.format(name))

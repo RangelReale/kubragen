@@ -1,4 +1,4 @@
-from typing import Optional, Any, List
+from typing import Optional, Any, Sequence
 
 from .data import ValueData, DisabledData
 from .exception import InvalidParamError
@@ -17,7 +17,7 @@ class KDataHelper_Env(KDataHelper):
     KData helpers for Kubernetes *container.env* values.
     """
     @staticmethod
-    def allowed_kdata() -> List[Any]:
+    def allowed_kdata() -> Sequence[Any]:
         """Returns the allowed  list of :class:`KData`"""
         return [KData_Value, KData_ConfigMap, KData_Secret]
 
@@ -87,7 +87,7 @@ class KDataHelper_Volume(KDataHelper):
     KData helpers for Kubernetes *podSpec.volumes* values.
     """
     @staticmethod
-    def allowed_kdata() -> List[Any]:
+    def allowed_kdata() -> Sequence[Any]:
         """Returns the allowed  list of :class:`KData`"""
         return [KData_Value, KData_ConfigMap, KData_Secret]
 
