@@ -22,6 +22,18 @@ See source code for examples
 * Documentation: https://kubragen.readthedocs.org/
 * PyPI: https://pypi.python.org/pypi/kubragen
 
+### Builders
+
+* RabbitMQ: [kg_rabbitmq](https://github.com/RangelReale/kg_rabbitmq)
+* Traefik 2: [kg_traefik2](https://github.com/RangelReale/kg_traefik2)
+* Keycloak: [kg_keycloak](https://github.com/RangelReale/kg_keycloak)
+* Ingress NGINX: [kg_ingressnginx](https://github.com/RangelReale/kg_ingressnginx)
+* Prometheus: [kg_prometheus](https://github.com/RangelReale/kg_prometheus)
+* Grafana: [kg_grafana](https://github.com/RangelReale/kg_grafana)
+* Node Exporter: [kg_nodeexporter](https://github.com/RangelReale/kg_nodeexporter)
+* Kube State Metrics: [kg_kubestatemetrics](https://github.com/RangelReale/kg_kubestatemetrics)
+* RabbitMQ (Online YAML download): [kg_rabbitmqonline](https://github.com/RangelReale/kg_rabbitmqonline)
+
 ## Example
 
 This example is purposeful convoluted to illustrate the many features of the library.
