@@ -21,6 +21,9 @@ PROVIDER_KIND: TProvider = 'kind'
 PROVIDER_K3D: TProvider = 'k3d'
 """K3D provider"""
 
+PROVIDER_K3S: TProvider = 'k3s'
+"""K3S provider"""
+
 PROVIDERSVC_GENERIC: TProviderSvc = 'generic'
 """Generic provider service"""
 
