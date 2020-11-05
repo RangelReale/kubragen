@@ -23,7 +23,7 @@ setuptools.setup(
     long_description=long_description,
     long_description_content_type="text/markdown",
     url="https://github.com/RangelReale/kubragen",
-    packages=['kubragen', 'kubragen.private', 'tests'],
+    packages=['kubragen', 'kubragen.private', 'kubragen.cmd', 'tests'],
     install_requires=INSTALL_REQUIRES,
     test_suite="tests",
     classifiers=[
