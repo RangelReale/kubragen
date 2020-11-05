@@ -53,11 +53,11 @@ class KDataHelper_Env(KDataHelper):
             ret = {}
 
         if isinstance(value, KData):
-            if isinstance(kdata, KData_Value):
+            if isinstance(value, KData_Value):
                 default_value = {
                     'value': QuotedStr(value.value),
                 }
-            elif isinstance(kdata, KData_ConfigMap):
+            elif isinstance(value, KData_ConfigMap):
                 default_value = {
                     'valueFrom': {
                         'configMapKeyRef': {
@@ -66,7 +66,7 @@ class KDataHelper_Env(KDataHelper):
                         }
                     },
                 }
-            elif isinstance(kdata, KData_Secret):
+            elif isinstance(value, KData_Secret):
                 default_value = {
                     'valueFrom': {
                         'secretKeyRef': {
@@ -76,7 +76,7 @@ class KDataHelper_Env(KDataHelper):
                     },
                 }
             else:
-                raise InvalidParamError('Unsupported KData: "{}"'.format(repr(kdata)))
+                raise InvalidParamError('Unsupported KData: "{}"'.format(repr(value)))
         elif value is not None:
             if isinstance(value, Mapping):
                 default_value = value
@@ -133,9 +133,9 @@ class KDataHelper_Volume(KDataHelper):
             ret = {}
 
         if isinstance(value, KData):
-            if isinstance(kdata, KData_Value):
+            if isinstance(value, KData_Value):
                 default_value = value.value
-            elif isinstance(kdata, KData_ConfigMap):
+            elif isinstance(value, KData_ConfigMap):
                 default_value = {
                     'configMap': {
                         'name': value.configmapName,
@@ -145,7 +145,7 @@ class KDataHelper_Volume(KDataHelper):
                         }],
                     }
                 }
-            elif isinstance(kdata, KData_Secret):
+            elif isinstance(value, KData_Secret):
                 default_value = {
                     'secret': {
                         'secretName': value.secretName,
@@ -156,7 +156,7 @@ class KDataHelper_Volume(KDataHelper):
                     }
                 }
             else:
-                raise InvalidParamError('Unsupported KData: "{}"'.format(repr(kdata)))
+                raise InvalidParamError('Unsupported KData: "{}"'.format(repr(value)))
         elif value is not None:
             if isinstance(value, Mapping):
                 default_value = value
@@ -165,6 +165,6 @@ class KDataHelper_Volume(KDataHelper):
 
         # Check again
         if disable_if_none and default_value is None:
-            return Disabled()
+            return DisabledData()
 
         return Merger.merge(ret, default_value)

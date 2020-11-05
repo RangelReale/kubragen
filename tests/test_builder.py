@@ -3,6 +3,7 @@ from typing import Optional, Sequence, Any, Mapping
 
 from kubragen import KubraGen
 from kubragen.builder import Builder
+from kubragen.data import DisabledData
 from kubragen.exception import OptionError, InvalidParamError
 from kubragen.kdata import IsKData, KData_Secret, KData_ConfigMap, KData_Value
 from kubragen.kdatahelper import KDataHelper_Volume, KDataHelper_Env
@@ -56,14 +57,14 @@ class TestBuilder(unittest.TestCase):
 
         kdata = KDataHelper_Env.info(base_value={
             'name': 'APP_PASSWORD',
-        }, kdata=builder.option_get('config.password'), default_value={
+        }, value=builder.option_get('config.password'), default_value={
             'valueFrom': {
                 'secretKeyRef': {
                     'name': 'bt-config-secret',
                     'key': 'password'
                 }
             },
-        }, disable_if_none=True)
+        })
         self.assertEqual(kdata, kdata_default)
 
     def test_options_kdata_nosecret(self):
@@ -83,7 +84,34 @@ class TestBuilder(unittest.TestCase):
 
         kdata = KDataHelper_Env.info(base_value={
             'name': 'APP_PASSWORD',
-        }, kdata=builder.option_get('config.password'), default_value={
+        }, value=builder.option_get('config.password'), default_value={
+            'valueFrom': {
+                'secretKeyRef': {
+                    'name': 'bt-config-secret',
+                    'key': 'password'
+                }
+            },
+        })
+        self.assertEqual(kdata, kdata_default)
+
+    def test_options_kdata_disable(self):
+        builder = BuilderTest(self.kg, BuilderTestOptions({
+            'config': {}
+        }))
+
+        kdata_default = {
+            'name': 'APP_PASSWORD',
+            'valueFrom': {
+                'secretKeyRef': {
+                    'name': 'bt-config-secret',
+                    'key': 'password'
+                }
+            },
+        }
+
+        kdata = KDataHelper_Env.info(base_value={
+            'name': 'APP_PASSWORD',
+        }, value=builder.option_get('config.password'), default_value={
             'valueFrom': {
                 'secretKeyRef': {
                     'name': 'bt-config-secret',
@@ -91,7 +119,7 @@ class TestBuilder(unittest.TestCase):
                 }
             },
         }, disable_if_none=True)
-        self.assertEqual(kdata, kdata_default)
+        self.assertIsInstance(kdata, DisabledData)
 
 
 class BuilderTestOptions(Options):
