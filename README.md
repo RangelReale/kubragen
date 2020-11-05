@@ -33,6 +33,8 @@ See source code for examples
 * Node Exporter: [kg_nodeexporter](https://github.com/RangelReale/kg_nodeexporter)
 * Kube State Metrics: [kg_kubestatemetrics](https://github.com/RangelReale/kg_kubestatemetrics)
 * RabbitMQ (Online YAML download): [kg_rabbitmqonline](https://github.com/RangelReale/kg_rabbitmqonline)
+* Prometheus Stack (Prometheus, Grafana, Node Exporter, Kube State Metrics): [kg_prometheusstack](https://github.com/RangelReale/kg_prometheusstack)
+
 
 ## Example
 
