@@ -1,4 +1,4 @@
-from typing import Optional, Any, Sequence
+from typing import Optional, Any, Sequence, Mapping
 
 from .data import ValueData, DisabledData
 from .exception import InvalidParamError
@@ -22,41 +22,47 @@ class KDataHelper_Env(KDataHelper):
         return [KData_Value, KData_ConfigMap, KData_Secret]
 
     @staticmethod
-    def info(base_value, kdata: Optional[Any], default_value: Optional[Any] = None, enabled: bool = True,
-             disable_if_none: bool = False) -> Any:
+    def info(base_value, value: Optional[Any] = None, kdata_value: Optional[Any] = None,
+             default_value: Optional[Any] = None, enabled: bool = True, disable_if_none: bool = False) -> Any:
         """
-        Outputs a configuration compatible with the Kubernetes *container.env* for the passed :class:`KData`,
-        with a default value if it was not configured by the user.
+        Outputs a configuration compatible with the Kubernetes *container.env*.
+
+        If *value* is not a Mapping, it will be considered a simple 'value' field.
 
         :param base_value: the base dict that is merged with the result, normally containing the name of the object.
-        :type base_value: dict
-        :param kdata: a value to check whether it should be treated as a :class:`KData` or not
-        :param default_value: a default value to use if kdata is None
+        :type base_value: Mapping
+        :param value: a value configured by the user, possibly None
+        :param kdata_value: a :class:`kubragen.kdata.KData` value configured by the user, possibly None. If
+            not a KData instance, **will be ignored**.
+        :param default_value: a default value to use if value is None
         :param enabled: whether the information is enabled. If not, a :class:`kubragen.data.DisabledData` is returned
-        :param disable_if_none: automatically disable if default_value is None
+        :param disable_if_none: automatically disable if value is None
         :return: a configuration compatible with the Kubernetes *container.env* specification
         """
         if not enabled:
-            return ValueData(enabled=False)
+            return DisabledData()
 
-        if disable_if_none and default_value is None:
+        if kdata_value is not None and isinstance(kdata_value, KData):
+            value = kdata_value
+
+        if disable_if_none and value is None:
             return DisabledData()
 
         ret = base_value
         if ret is None:
             ret = {}
 
-        if isinstance(kdata, KData):
+        if isinstance(value, KData):
             if isinstance(kdata, KData_Value):
                 default_value = {
-                    'value': QuotedStr(kdata.value),
+                    'value': QuotedStr(value.value),
                 }
             elif isinstance(kdata, KData_ConfigMap):
                 default_value = {
                     'valueFrom': {
                         'configMapKeyRef': {
-                            'name': kdata.configmapName,
-                            'key': kdata.configmapData
+                            'name': value.configmapName,
+                            'key': value.configmapData
                         }
                     },
                 }
@@ -64,20 +70,24 @@ class KDataHelper_Env(KDataHelper):
                 default_value = {
                     'valueFrom': {
                         'secretKeyRef': {
-                            'name': kdata.secretName,
-                            'key': kdata.secretData
+                            'name': value.secretName,
+                            'key': value.secretData
                         }
                     },
                 }
             else:
                 raise InvalidParamError('Unsupported KData: "{}"'.format(repr(kdata)))
+        elif value is not None:
+            if isinstance(value, Mapping):
+                default_value = value
+            else:
+                default_value = {
+                    'value': QuotedStr(value),
+                }
 
-        if default_value is None:
-            default_value = kdata
-
-        # Check again to be sure
+        # Check again
         if disable_if_none and default_value is None:
-            return ValueData(enabled=False)
+            return DisabledData()
 
         return Merger.merge(ret, default_value)
 
@@ -92,61 +102,69 @@ class KDataHelper_Volume(KDataHelper):
         return [KData_Value, KData_ConfigMap, KData_Secret]
 
     @staticmethod
-    def info(base_value, kdata: Optional[Any], default_value: Optional[Any] = None, key_path: Optional[str] = None,
-             enabled: bool = True, disable_if_none: bool = False):
+    def info(base_value, value: Optional[Any] = None, kdata_value: Optional[Any] = None,
+             default_value: Optional[Any] = None, key_path: Optional[str] = None, enabled: bool = True,
+             disable_if_none: bool = False):
         """
         Outputs a configuration compatible with the Kubernetes *podSpec.volume* for the passed :class:`KData`,
         with a default value if it was not configured by the user.
 
         :param base_value: the base dict that is merged with the result, normally containing the name of the object.
         :type base_value: dict
-        :param kdata: a value to check whether it should be treated as a :class:`KData` or not
-        :param default_value: a default value to use if kdata is None
+        :param value: a value configured by the user, possibly None
+        :param kdata_value: a :class:`kubragen.kdata.KData` value configured by the user, possibly None. If
+            not a KData instance, **will be ignored**.
+        :param default_value: a default value to use if value is None
         :param enabled: whether the information is enabled. If not, a :class:`kubragen.data.DisabledData` is returned
-        :param disable_if_none: automatically disable if default_value is None
+        :param disable_if_none: automatically disable if value is None
         :return: a configuration compatible with the Kubernetes *podSpec.volume* specification
         """
         if not enabled:
-            return ValueData(enabled=False)
+            return DisabledData()
 
-        if disable_if_none and default_value is None:
-            return ValueData(enabled=False)
+        if kdata_value is not None and isinstance(kdata_value, KData):
+            value = kdata_value
+
+        if disable_if_none and value is None:
+            return DisabledData()
 
         ret = base_value
         if ret is None:
             ret = {}
 
-        if isinstance(kdata, KData):
+        if isinstance(value, KData):
             if isinstance(kdata, KData_Value):
-                default_value = kdata.value
+                default_value = value.value
             elif isinstance(kdata, KData_ConfigMap):
                 default_value = {
                     'configMap': {
-                        'name': kdata.configmapName,
+                        'name': value.configmapName,
                         'items': [{
-                            'key': kdata.configmapData,
-                            'path': kdata.configmapData if key_path is None else key_path,
+                            'key': value.configmapData,
+                            'path': value.configmapData if key_path is None else key_path,
                         }],
                     }
                 }
             elif isinstance(kdata, KData_Secret):
                 default_value = {
                     'secret': {
-                        'secretName': kdata.secretName,
+                        'secretName': value.secretName,
                         'items': [{
-                            'key': kdata.secretData,
-                            'path': kdata.secretData if key_path is None else key_path,
+                            'key': value.secretData,
+                            'path': value.secretData if key_path is None else key_path,
                         }],
                     }
                 }
             else:
                 raise InvalidParamError('Unsupported KData: "{}"'.format(repr(kdata)))
+        elif value is not None:
+            if isinstance(value, Mapping):
+                default_value = value
+            else:
+                raise InvalidParamError('Unsupported Volume spec: "{}"'.format(str(value)))
 
-        if default_value is None:
-            default_value = kdata
-
-        # Check again to be sure
+        # Check again
         if disable_if_none and default_value is None:
-            return ValueData(enabled=False)
+            return Disabled()
 
         return Merger.merge(ret, default_value)
