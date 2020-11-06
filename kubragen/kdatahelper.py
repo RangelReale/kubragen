@@ -22,7 +22,7 @@ class KDataHelper_Env(KDataHelper):
         return [KData_Value, KData_ConfigMap, KData_Secret]
 
     @staticmethod
-    def info(base_value, value: Optional[Any] = None, kdata_value: Optional[Any] = None,
+    def info(base_value, value: Optional[Any] = None, value_if_kdata: Optional[Any] = None,
              default_value: Optional[Any] = None, enabled: bool = True, disable_if_none: bool = False) -> Any:
         """
         Outputs a configuration compatible with the Kubernetes *container.env*.
@@ -32,8 +32,8 @@ class KDataHelper_Env(KDataHelper):
         :param base_value: the base dict that is merged with the result, normally containing the name of the object.
         :type base_value: Mapping
         :param value: a value configured by the user, possibly None
-        :param kdata_value: a :class:`kubragen.kdata.KData` value configured by the user, possibly None. If
-            not a KData instance, **will be ignored**.
+        :param value_if_kdata: a :class:`kubragen.kdata.KData` value configured by the user, possibly None. If
+            not a KData instance, **it will be ignored**, and you are supposed to set a value in *default_value.
         :param default_value: a default value to use if value is None
         :param enabled: whether the information is enabled. If not, a :class:`kubragen.data.DisabledData` is returned
         :param disable_if_none: automatically disable if value and kdata_value is None
@@ -42,10 +42,10 @@ class KDataHelper_Env(KDataHelper):
         if not enabled:
             return DisabledData()
 
-        if kdata_value is not None and isinstance(kdata_value, KData):
-            value = kdata_value
+        if value_if_kdata is not None and isinstance(value_if_kdata, KData):
+            value = value_if_kdata
 
-        if disable_if_none and value is None and kdata_value is None:
+        if disable_if_none and value is None and value_if_kdata is None:
             return DisabledData()
 
         ret = base_value
@@ -102,7 +102,7 @@ class KDataHelper_Volume(KDataHelper):
         return [KData_Value, KData_ConfigMap, KData_Secret]
 
     @staticmethod
-    def info(base_value, value: Optional[Any] = None, kdata_value: Optional[Any] = None,
+    def info(base_value, value: Optional[Any] = None, value_if_kdata: Optional[Any] = None,
              default_value: Optional[Any] = None, key_path: Optional[str] = None, enabled: bool = True,
              disable_if_none: bool = False):
         """
@@ -112,8 +112,8 @@ class KDataHelper_Volume(KDataHelper):
         :param base_value: the base dict that is merged with the result, normally containing the name of the object.
         :type base_value: dict
         :param value: a value configured by the user, possibly None
-        :param kdata_value: a :class:`kubragen.kdata.KData` value configured by the user, possibly None. If
-            not a KData instance, **will be ignored**.
+        :param value_if_kdata: a :class:`kubragen.kdata.KData` value configured by the user, possibly None. If
+            not a KData instance, **it will be ignored**, and you are supposed to set a value in *default_value.
         :param default_value: a default value to use if value is None
         :param enabled: whether the information is enabled. If not, a :class:`kubragen.data.DisabledData` is returned
         :param disable_if_none: automatically disable if value and kdata_value is None
@@ -122,10 +122,10 @@ class KDataHelper_Volume(KDataHelper):
         if not enabled:
             return DisabledData()
 
-        if kdata_value is not None and isinstance(kdata_value, KData):
-            value = kdata_value
+        if value_if_kdata is not None and isinstance(value_if_kdata, KData):
+            value = value_if_kdata
 
-        if disable_if_none and value is None and kdata_value is None:
+        if disable_if_none and value is None and value_if_kdata is None:
             return DisabledData()
 
         ret = base_value
