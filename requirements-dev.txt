@@ -2,3 +2,5 @@ sphinx<3.3.0
 wheel
 sphinx-rtd-theme
 m2r2
+bump2version
+twine
