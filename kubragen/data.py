@@ -1,3 +1,4 @@
+import copy
 from typing import Any, Mapping, Sequence, MutableMapping, MutableSequence, Union
 
 from .exception import InvalidOperationError
@@ -140,6 +141,7 @@ def DataCleanProp(data: Union[MutableMapping, MutableSequence], key: Any) -> Non
 def DataClean(data: Any) -> Any:
     """
     Cleanup all instances of Data classes, removing if not enabled or replacing by its value.
+
     :param data: the data to mutate
     :return: the same value passed, mutated
     """
@@ -155,3 +157,14 @@ def DataClean(data: Any) -> Any:
         for item in data:
             DataClean(item)
     return data
+
+
+def DataCleanNoMutate(data: Any) -> Any:
+    """
+    Cleanup all instances of Data classes, removing if not enabled or replacing by its value.
+
+    :param data: the data
+    :return: a copy of the data, mutated
+    """
+    mdata = copy.deepcopy(data)
+    return DataClean(mdata)
