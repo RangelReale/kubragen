@@ -88,3 +88,18 @@ class ConfigDataMerge(ValueData):
             if self.default_merge is not None:
                 Merger.merge(ret, self.default_merge)
         return ret
+
+
+def ValueIsNone(value: Any) -> bool:
+    """
+    Checks if the value is None.
+    If value is an instance of :class:`Data`, check its *is_enabled()* method.
+
+    :param value: the value to check for None
+    :return: whether the value is None or disabled
+    """
+    if isinstance(value, Data):
+        if not value.is_enabled():
+            return True
+        return ValueIsNone(value.get_value())
+    return value is None
