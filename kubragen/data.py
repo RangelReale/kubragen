@@ -1,5 +1,6 @@
 from typing import Any, Mapping, Sequence
 
+from .exception import InvalidOperationError
 from .merger import Merger
 
 
@@ -103,3 +104,23 @@ def ValueIsNone(value: Any) -> bool:
             return True
         return ValueIsNone(value.get_value())
     return value is None
+
+
+def ValueGetValue(value: Any, raise_if_disabled: bool = False) -> Any:
+    """
+    Returns the value.
+    If value is an instance of :class:`Data`, call its get_value() method, or return None if
+    not enabled.
+
+    :param value: the value to check
+    :param raise_if_disabled: whether to raise an exception if the value is disabled.
+    :return: the value
+    :raises: :class:`kubragen.exception.InvalidOperationError`
+    """
+    if isinstance(value, Data):
+        if not value.is_enabled():
+            if raise_if_disabled:
+                raise InvalidOperationError('Value is disabled')
+            return None
+        return ValueGetValue(value.get_value())
+    return value
