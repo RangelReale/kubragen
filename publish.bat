@@ -23,7 +23,6 @@ if errorlevel 1 goto error
 twine upload dist/*
 if errorlevel 1 goto error
 
-echo Don't forget to push tags to git.
 goto end
 
 :PARAMERROR
