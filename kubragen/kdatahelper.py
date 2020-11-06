@@ -36,7 +36,7 @@ class KDataHelper_Env(KDataHelper):
             not a KData instance, **it will be ignored**, and you are supposed to set a value in *default_value.
         :param default_value: a default value to use if value is None
         :param enabled: whether the information is enabled. If not, a :class:`kubragen.data.DisabledData` is returned
-        :param disable_if_none: automatically disable if value and kdata_value is None
+        :param disable_if_none: automatically disable if value and value_if_kdata is None
         :return: a configuration compatible with the Kubernetes *container.env* specification
         """
         if not enabled:
@@ -116,7 +116,7 @@ class KDataHelper_Volume(KDataHelper):
             not a KData instance, **it will be ignored**, and you are supposed to set a value in *default_value.
         :param default_value: a default value to use if value is None
         :param enabled: whether the information is enabled. If not, a :class:`kubragen.data.DisabledData` is returned
-        :param disable_if_none: automatically disable if value and kdata_value is None
+        :param disable_if_none: automatically disable if value and value_if_kdata is None
         :return: a configuration compatible with the Kubernetes *podSpec.volume* specification
         """
         if not enabled:
