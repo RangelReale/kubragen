@@ -143,7 +143,7 @@ def DataClean(data: Any) -> Any:
     Cleanup all instances of Data classes, removing if not enabled or replacing by its value.
 
     :param data: the data to mutate
-    :return: the same value passed, mutated
+    :return: the same value passed, mutated, except if it is *Data{enabled=False}*, in this case it returns None.
     """
     if isinstance(data, MutableMapping):
         keylist = list(data.keys())
@@ -156,7 +156,7 @@ def DataClean(data: Any) -> Any:
             DataCleanProp(data, key)
         for item in data:
             DataClean(item)
-    return data
+    return DataGetValue(data)
 
 
 def DataCleanNoMutate(data: Any) -> Any:
