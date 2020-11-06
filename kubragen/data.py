@@ -91,7 +91,7 @@ class ConfigDataMerge(ValueData):
         return ret
 
 
-def ValueIsNone(value: Any) -> bool:
+def DataIsNone(value: Any) -> bool:
     """
     Checks if the value is None.
     If value is an instance of :class:`Data`, check its *is_enabled()* method.
@@ -102,11 +102,11 @@ def ValueIsNone(value: Any) -> bool:
     if isinstance(value, Data):
         if not value.is_enabled():
             return True
-        return ValueIsNone(value.get_value())
+        return DataIsNone(value.get_value())
     return value is None
 
 
-def ValueGetValue(value: Any, raise_if_disabled: bool = False) -> Any:
+def DataGetValue(value: Any, raise_if_disabled: bool = False) -> Any:
     """
     Returns the value.
     If value is an instance of :class:`Data`, call its get_value() method, or return None if
@@ -122,5 +122,5 @@ def ValueGetValue(value: Any, raise_if_disabled: bool = False) -> Any:
             if raise_if_disabled:
                 raise InvalidOperationError('Value is disabled')
             return None
-        return ValueGetValue(value.get_value())
+        return DataGetValue(value.get_value())
     return value
