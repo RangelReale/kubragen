@@ -2,6 +2,10 @@ class KGException(Exception):
     pass
 
 
+class InvalidOperationError(KGException):
+    pass
+
+
 class InvalidParamError(KGException):
     pass
 

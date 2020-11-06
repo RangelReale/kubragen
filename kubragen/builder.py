@@ -1,6 +1,6 @@
 from typing import TypeVar, Sequence, Any, Mapping, Dict
 
-from .exception import KGException, InvalidNameError, NotFoundError
+from .exception import KGException, InvalidNameError, NotFoundError, InvalidOperationError
 from .jsonpatch import FilterJSONPatches, FilterJSONPatches_Apply
 from .kubragen import KubraGen
 from .object import ObjectItem, Object
@@ -68,8 +68,15 @@ class Builder:
     def builditem_names(self) -> Sequence[TBuildItem]:
         return []
 
-    def ensure_build_names(self, *buildnames: TBuild):
-        return set(self.build_names_required()).issubset(set(buildnames))
+    def ensure_build_names(self, *buildnames: TBuild) -> None:
+        """
+        Ensures that all required build names will be build.
+
+        :param buildnames: list of build names
+        :raises: :class:`kubragen.exception.InvalidOperationError`
+        """
+        if not set(self.build_names_required()).issubset(set(buildnames)):
+            raise InvalidOperationError('Missing required build names')
 
     def build(self, *buildnames: TBuild) -> Sequence[ObjectItem]:
         ret = []
