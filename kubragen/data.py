@@ -1,4 +1,4 @@
-from typing import Any, Mapping, Sequence
+from typing import Any, Mapping, Sequence, MutableMapping, MutableSequence, Union
 
 from .exception import InvalidOperationError
 from .merger import Merger
@@ -124,3 +124,31 @@ def DataGetValue(value: Any, raise_if_disabled: bool = False) -> Any:
             return None
         return DataGetValue(value.get_value())
     return value
+
+
+def DataCleanProp(data: Union[MutableMapping, MutableSequence], key: Any) -> None:
+    """
+    Cleanup instances of Data class in Mapping or Sequence.
+    """
+    if isinstance(data[key], Data):
+        if not data[key].is_enabled():
+            del data[key]
+        else:
+            data[key] = data[key].get_value()
+
+
+def DataClean(data: Any) -> None:
+    """
+    Cleanup all instances of Data classes, removing if not enabled or replacing by its value.
+    """
+    if isinstance(data, MutableMapping):
+        keylist = list(data.keys())
+        for key in keylist:
+            DataCleanProp(data, key)
+        for item in data.values():
+            DataClean(item)
+    elif isinstance(data, MutableSequence):
+        for key in range(len(data) - 1, -1, -1):
+            DataCleanProp(data, key)
+        for item in data:
+            DataClean(item)

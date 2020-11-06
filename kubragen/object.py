@@ -1,7 +1,6 @@
 from typing import Any, Optional, Union
 
-from .private.object import object_clean
-from .types import TBuildItem
+from .data import DataClean
 
 
 class Object(dict):
@@ -24,7 +23,7 @@ class Object(dict):
     def __init__(self, data=None, name: Optional[str] = None, source: Optional[str] = None,
                  instance: Optional[str] = None):
         super().__init__()
-        object_clean(data)
+        DataClean(data)
         self.update(data)
         self.name = name
         self.source = source
