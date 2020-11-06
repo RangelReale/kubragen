@@ -137,9 +137,11 @@ def DataCleanProp(data: Union[MutableMapping, MutableSequence], key: Any) -> Non
             data[key] = data[key].get_value()
 
 
-def DataClean(data: Any) -> None:
+def DataClean(data: Any) -> Any:
     """
     Cleanup all instances of Data classes, removing if not enabled or replacing by its value.
+    :param data: the data to mutate
+    :return: the same value passed, mutated
     """
     if isinstance(data, MutableMapping):
         keylist = list(data.keys())
@@ -152,3 +154,4 @@ def DataClean(data: Any) -> None:
             DataCleanProp(data, key)
         for item in data:
             DataClean(item)
+    return data
