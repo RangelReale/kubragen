@@ -32,9 +32,12 @@ See source code for examples
 * Grafana: [kg_grafana](https://github.com/RangelReale/kg_grafana)
 * Node Exporter: [kg_nodeexporter](https://github.com/RangelReale/kg_nodeexporter)
 * Kube State Metrics: [kg_kubestatemetrics](https://github.com/RangelReale/kg_kubestatemetrics)
+* Loki: [kg_loki](https://github.com/RangelReale/kg_loki)
+* Promtail: [kg_promtail](https://github.com/RangelReale/kg_promtail)
 * RabbitMQ (Online YAML download): [kg_rabbitmqonline](https://github.com/RangelReale/kg_rabbitmqonline)
 * Prometheus Stack (Prometheus, Grafana, Node Exporter, Kube State Metrics): [kg_prometheusstack](https://github.com/RangelReale/kg_prometheusstack)
 * EFK Stack (Elasticsearch, Fluentd, Kibana): [kg_efk](https://github.com/RangelReale/kg_efk)
+* Loki Stack (Loki, Promtail, Grafana): [kg_lokistack](https://github.com/RangelReale/kg_lokistack)
 
 
 ## Example
