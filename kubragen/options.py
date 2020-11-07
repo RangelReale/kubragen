@@ -1,6 +1,6 @@
 from typing import Any, Optional, Tuple, Protocol
 
-from .data import Data, DataGetValue
+from .data import Data, DataClean
 from .exception import OptionError
 from .option import Option, OptionRoot, OptionDef, OptionValue
 from .private.options import OptionsCheckDefinitions
@@ -118,7 +118,7 @@ def option_root_get(options: OptionsBase, name: str, root_options: Optional[Opti
                 ))
 
     if handle_data:
-        return DataGetValue(value)
+        return DataClean(value, in_place=False)
     return value
 
 

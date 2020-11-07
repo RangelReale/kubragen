@@ -1,7 +1,7 @@
 import unittest
 from typing import Optional, Any
 
-from kubragen.data import ValueData, Data
+from kubragen.data import ValueData, Data, DisabledData
 from kubragen.exception import OptionError
 from kubragen.helper import LiteralStr, HelperStr
 from kubragen.option import OptionDef, OptionRoot, OptionDefaultValue, OptionValue, Option, OptionValueCallable
@@ -173,3 +173,33 @@ class TestOptions(unittest.TestCase):
         })
         self.assertIsNone(option_root_get(opt, 'foo.bar'))
         self.assertIsInstance(option_root_get(opt, 'foo.bar', handle_data=False), Data)
+
+    def test_options_data_inner(self):
+        opt = OptionsBase(defined_options={
+            'foo': {
+                'bar': OptionDef(default_value=[]),
+            }
+        }, options={
+            'foo': {
+                'bar': [
+                    ValueData(1, enabled=True),
+                    ValueData(2, enabled=False),
+                ],
+            }
+        })
+        self.assertEqual(option_root_get(opt, 'foo.bar'), [1])
+
+    def test_options_data_inner2(self):
+        opt = OptionsBase(defined_options={
+            'foo': {
+                'bar': OptionDef(default_value={}),
+            }
+        }, options={
+            'foo': {
+                'bar': {
+                    'gin': ValueData(1, enabled=True),
+                    'per': ValueData(2, enabled=False),
+                },
+            }
+        })
+        self.assertEqual(option_root_get(opt, 'foo.bar'), {'gin': 1})
