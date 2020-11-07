@@ -1,6 +1,7 @@
 import unittest
 from typing import Optional, Any
 
+from kubragen.data import ValueData, Data
 from kubragen.exception import OptionError
 from kubragen.helper import LiteralStr, HelperStr
 from kubragen.option import OptionDef, OptionRoot, OptionDefaultValue, OptionValue, Option, OptionValueCallable
@@ -133,3 +134,42 @@ class TestOptions(unittest.TestCase):
             }
         })
         self.assertEqual(option_root_get(opt, 'foo.bar', root_options=root_options), 'baz')
+
+    def test_options_data(self):
+        opt = OptionsBase(defined_options={
+            'foo': {
+                'bar': OptionDef(default_value='baz'),
+            }
+        }, options={
+            'foo': {
+                'bar': ValueData('diz', enabled=True),
+            }
+        })
+        self.assertEqual(option_root_get(opt, 'foo.bar'), 'diz')
+        self.assertIsInstance(option_root_get(opt, 'foo.bar', handle_data=False), Data)
+
+    def test_options_data_recursive(self):
+        opt = OptionsBase(defined_options={
+            'foo': {
+                'bar': OptionDef(default_value='baz'),
+            }
+        }, options={
+            'foo': {
+                'bar': ValueData(ValueData('diz', enabled=True), enabled=True),
+            }
+        })
+        self.assertEqual(option_root_get(opt, 'foo.bar'), 'diz')
+        self.assertIsInstance(option_root_get(opt, 'foo.bar', handle_data=False), Data)
+
+    def test_options_data_disabled(self):
+        opt = OptionsBase(defined_options={
+            'foo': {
+                'bar': OptionDef(default_value='baz'),
+            }
+        }, options={
+            'foo': {
+                'bar': ValueData('diz', enabled=False),
+            }
+        })
+        self.assertIsNone(option_root_get(opt, 'foo.bar'))
+        self.assertIsInstance(option_root_get(opt, 'foo.bar', handle_data=False), Data)

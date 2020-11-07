@@ -1,6 +1,6 @@
 from typing import Any, Optional, Tuple, Protocol
 
-from .data import Data
+from .data import Data, DataGetValue
 from .exception import OptionError
 from .option import Option, OptionRoot, OptionDef, OptionValue
 from .private.options import OptionsCheckDefinitions
@@ -77,13 +77,15 @@ class Options(OptionsBase):
         return None
 
 
-def option_root_get(options: OptionsBase, name: str, root_options: Optional[OptionsBase] = None) -> Any:
+def option_root_get(options: OptionsBase, name: str, root_options: Optional[OptionsBase] = None,
+                    handle_data: bool = True) -> Any:
     """
     Get an option value using the root options if requested using :class:`OptionRoot`
 
     :param options: the builder options to get the primary options from
     :param name: the option name in dot format (config.service_port)
     :param root_options: the root options if available
+    :param handle_data: whether to process :class:`kubragen.data.Data` instances or return them.
     :return: the option value
     :raises: :class:`kubragen.exception.OptionError`
     :raises: :class:`kubragen.exception.TypeError`
@@ -115,6 +117,8 @@ def option_root_get(options: OptionsBase, name: str, root_options: Optional[Opti
                     type_name(value), name, ', '.join(['"{}"'.format(type_name(t)) for t in tprint])
                 ))
 
+    if handle_data:
+        return DataGetValue(value)
     return value
 
 
