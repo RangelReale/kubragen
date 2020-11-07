@@ -4,7 +4,7 @@ import semver
 
 from .consts import DEFAULT_KUBERNETES_VERSION
 from .exception import InvalidParamError
-from .options import Options, option_root_get
+from .options import Options, option_root_get, OptionsBase
 from .provider import Provider
 
 
@@ -20,9 +20,9 @@ class KubraGen:
     """
     provider: Provider
     kubernetes_version: semver.VersionInfo
-    options: Options
+    options: OptionsBase
 
-    def __init__(self, provider: Provider, options: Optional[Options] = None, kubernetes_version: Optional[str] = None):
+    def __init__(self, provider: Provider, options: Optional[OptionsBase] = None, kubernetes_version: Optional[str] = None):
         self.provider = provider
         if options is None:
             options = Options({})

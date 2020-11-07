@@ -7,15 +7,12 @@ from .private.options import OptionsCheckDefinitions
 from .util import dict_get_value, dict_has_name, is_allowed_types, type_name
 
 
-class Options:
+class OptionsBase:
     """
     List of options.
 
-    Generators should override :func:`define_options` and declare its options.
-    If any options is declared in :func:`define_options`, only these options are allowed to be set,
-    otherwise there is no restriction.
-
-    :param options: the options to be set. If options are defined in :func:`define_options`,
+    :param defined_options: the list of defined options.
+    :param options: the options to be set. If options are defined in *defined_options*,
                     only declared options are allowed to be changed.
 
     :raises: :class:`kubragen.exception.OptionError`
@@ -23,19 +20,10 @@ class Options:
     defined_options: Any
     options: Any
 
-    def __init__(self, options: Optional[Any] = None):
-        self.defined_options = self.define_options()
+    def __init__(self, defined_options: Optional[Any] = None, options: Optional[Any] = None):
+        self.defined_options = defined_options
         self.options = options
         OptionsCheckDefinitions(self.defined_options, self.options)
-
-    def define_options(self) -> Optional[Any]:
-        """
-        Declares the options that are supported by this instance.
-        If None, don't limit the possible option values.
-
-        :return: The supported options
-        """
-        return None
 
     def value_definition_get(self, name: str) -> Tuple[Option, Any]:
         """
@@ -63,7 +51,33 @@ class Options:
         return self.value_definition_get(name)[1]
 
 
-def option_root_get(options: Options, name: str, root_options: Optional[Options] = None) -> Any:
+class Options(OptionsBase):
+    """
+    List of options.
+
+    Generators should override :func:`define_options` and declare its options.
+    If any options is declared in :func:`define_options`, only these options are allowed to be set,
+    otherwise there is no restriction.
+
+    :param options: the options to be set. If options are defined in :func:`define_options`,
+                    only declared options are allowed to be changed.
+
+    :raises: :class:`kubragen.exception.OptionError`
+    """
+    def __init__(self, options: Optional[Any] = None):
+        super().__init__(defined_options=self.define_options(), options=options)
+
+    def define_options(self) -> Optional[Any]:
+        """
+        Declares the options that are supported by this instance.
+        If None, don't limit the possible option values.
+
+        :return: The supported options
+        """
+        return None
+
+
+def option_root_get(options: OptionsBase, name: str, root_options: Optional[OptionsBase] = None) -> Any:
     """
     Get an option value using the root options if requested using :class:`OptionRoot`
 

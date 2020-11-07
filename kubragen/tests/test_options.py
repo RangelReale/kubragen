@@ -4,7 +4,7 @@ from typing import Optional, Any
 from kubragen.exception import OptionError
 from kubragen.helper import LiteralStr, HelperStr
 from kubragen.option import OptionDef, OptionRoot, OptionDefaultValue, OptionValue, Option, OptionValueCallable
-from kubragen.options import Options, option_root_get
+from kubragen.options import Options, option_root_get, OptionsBase
 
 
 class TestOptions(unittest.TestCase):
@@ -15,69 +15,51 @@ class TestOptions(unittest.TestCase):
                 'bar': 'baz',
             }
         })
-
         self.assertEqual(options.value_get('foo.bar'), 'baz')
 
     def test_options_defined(self):
         # Cannot create key when there are defined options
-
-        class TOption(Options):
-            def define_options(self) -> Optional[Any]:
-                return {
-                    'foo': {
-                        'bar': OptionDef(default_value='baz'),
-                    }
-                }
-
         with self.assertRaises(OptionError):
-            TOption({
+            OptionsBase(defined_options={
+                'foo': {
+                    'bar': OptionDef(default_value='baz'),
+                }
+            }, options={
                 'foo': {
                     'nobar': 'nobaz',
                 }
             })
 
     def test_options_default_value(self):
-        class TOption(Options):
-            def define_options(self) -> Optional[Any]:
-                return {
-                    'foo': {
-                        'bar': OptionDef(default_value='baz'),
-                    }
-                }
-
-        opt = TOption({
+        opt = OptionsBase(defined_options={
+            'foo': {
+                'bar': OptionDef(default_value='baz'),
+            }
+        }, options={
             'foo': {
             }
         })
         self.assertEqual(option_root_get(opt, 'foo.bar'), 'baz')
 
     def test_options_required(self):
-        class TOption(Options):
-            def define_options(self) -> Optional[Any]:
-                return {
-                    'foo': {
-                        'bar': OptionDef(required=True),
-                    }
-                }
-
         with self.assertRaises(TypeError):
-            opt = TOption({
+            opt = OptionsBase(defined_options={
+                'foo': {
+                    'bar': OptionDef(required=True),
+                }
+            }, options={
                 'foo': {
                 }
             })
             option_root_get(opt, 'foo.bar')
 
     def test_options_allowed_type(self):
-        class TOption(Options):
-            def define_options(self) -> Optional[Any]:
-                return {
-                    'foo': {
-                        'bar': OptionDef(required=True, allowed_types=[str, int]),
-                    }
-                }
-
         with self.assertRaises(TypeError):
-            opt = TOption({
+            opt = OptionsBase(defined_options={
+                'foo': {
+                    'bar': OptionDef(required=True, allowed_types=[str, int]),
+                }
+            }, options={
                 'foo': {
                     'bar': 3.0,
                 }
@@ -85,15 +67,11 @@ class TestOptions(unittest.TestCase):
             option_root_get(opt, 'foo.bar')
 
     def test_options_helper(self):
-        class TOption(Options):
-            def define_options(self) -> Optional[Any]:
-                return {
-                    'foo': {
-                        'bar': OptionDef(default_value='baz'),
-                    }
-                }
-
-        opt = TOption({
+        opt = OptionsBase(defined_options={
+            'foo': {
+                'bar': OptionDef(default_value='baz'),
+            }
+        }, options={
             'foo': {
                 'bar': LiteralStr('baz_literal'),
             }
@@ -105,15 +83,11 @@ class TestOptions(unittest.TestCase):
             def get_value(self, name: Optional[str] = None, base_option: Optional[Option] = None) -> Any:
                 return 'baz_value'
 
-        class TOption(Options):
-            def define_options(self) -> Optional[Any]:
-                return {
-                    'foo': {
-                        'bar': OptionDef(default_value='baz'),
-                    }
-                }
-
-        opt = TOption({
+        opt = OptionsBase(defined_options={
+            'foo': {
+                'bar': OptionDef(default_value='baz'),
+            }
+        }, options={
             'foo': {
                 'bar': TOptionValue(),
             }
@@ -121,15 +95,11 @@ class TestOptions(unittest.TestCase):
         self.assertEqual(option_root_get(opt, 'foo.bar'), 'baz_value')
 
     def test_options_value_default_value(self):
-        class TOption(Options):
-            def define_options(self) -> Optional[Any]:
-                return {
-                    'foo': {
-                        'bar': OptionDef(default_value='baz'),
-                    }
-                }
-
-        opt = TOption({
+        opt = OptionsBase(defined_options={
+            'foo': {
+                'bar': OptionDef(default_value='baz'),
+            }
+        }, options={
             'foo': {
                 'bar': OptionDefaultValue(),
             }
@@ -137,15 +107,11 @@ class TestOptions(unittest.TestCase):
         self.assertEqual(option_root_get(opt, 'foo.bar'), 'baz')
 
     def test_options_value_callable(self):
-        class TOption(Options):
-            def define_options(self) -> Optional[Any]:
-                return {
-                    'foo': {
-                        'bar': OptionDef(default_value='baz'),
-                    }
-                }
-
-        opt = TOption({
+        opt = OptionsBase(defined_options={
+            'foo': {
+                'bar': OptionDef(default_value='baz'),
+            }
+        }, options={
             'foo': {
                 'bar': OptionValueCallable(lambda n, o: 'baz_value'),
             }
@@ -153,19 +119,15 @@ class TestOptions(unittest.TestCase):
         self.assertEqual(option_root_get(opt, 'foo.bar'), 'baz_value')
 
     def test_options_root(self):
-        class TOption(Options):
-            def define_options(self) -> Optional[Any]:
-                return {
-                    'foo': {
-                        'bar': OptionDef(required=True),
-                    }
-                }
-
         root_options = Options({
             'root_bar': 'baz',
         })
 
-        opt = TOption({
+        opt = OptionsBase(defined_options={
+            'foo': {
+                'bar': OptionDef(required=True),
+            }
+        }, options={
             'foo': {
                 'bar': OptionRoot('root_bar'),
             }
