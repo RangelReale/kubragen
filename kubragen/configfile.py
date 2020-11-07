@@ -1,4 +1,4 @@
-from typing import Any, Tuple, Sequence, Mapping
+from typing import Any, Sequence, Mapping, Optional
 
 import yaml
 
@@ -30,6 +30,86 @@ class ConfigFile:
         :return: a :class:`ConfigFileOutput` with the config file contents
         """
         raise NotImplementedError()
+
+
+class ConfigFileExtensionData:
+    """
+    Data class for config file extensions.
+
+    This class is meant to avoid passing raw mutable data to the extensions.
+    """
+    data: Any
+
+    def __init__(self, data: Any):
+        self.data = data
+
+
+class ConfigFileExtension:
+    """
+    An extension for a config file
+    """
+    def process(self, configfile: 'ConfigFile', data: ConfigFileExtensionData, options: OptionGetter) -> None:
+        """
+        Process a config file data, modifying it if necessary.
+
+        :param configfile: the config file being extended
+        :param data: the current config file data. Change the *data* property to make your extensions.
+        :param options: the target options, usually a :class:`kubragen.builder.Builder`
+        :raises: :class:`kubragen.exception.ConfigFileError`
+        """
+        pass
+
+
+class ConfigFile_Extend(ConfigFile):
+    """
+    A :class:`ConfigFile` that allows extensions.
+
+    :param extensions: the initial extensions
+    """
+    extensions: Sequence[ConfigFileExtension]
+
+    def __init__(self, extensions: Optional[Sequence[ConfigFileExtension]] = None):
+        super().__init__()
+        if extensions is not None:
+            self.extensions = extensions
+        else:
+            self.extensions = []
+
+    def extension_add(self, *parts: ConfigFileExtension) -> None:
+        """
+        Add one or more config file extensions.
+
+        :param parts: List of extensions to add
+        """
+        self.extensions.extend(parts)
+
+    def init_value(self, options: OptionGetter) -> ConfigFileExtensionData:
+        """
+        Initialize data to send to extensions.
+
+        :param options: the target options, usually a :class:`kubragen.builder.Builder`
+        :return: the initial config data
+        """
+        raise NotImplementedError()
+
+    def finish_value(self, options: OptionGetter, data: ConfigFileExtensionData) -> ConfigFileOutput:
+        """
+        Finish the value after the extensions processing.
+
+        :param options: the target options, usually a :class:`kubragen.builder.Builder`
+        :param data: the final data after extension processing
+        :return: the data to be return by :func:`get_value`
+        """
+        raise NotImplementedError()
+
+    def get_value(self, options: OptionGetter) -> ConfigFileOutput:
+        """
+        Process all extensions and return the config file data.
+        """
+        data = self.init_value(options)
+        for extension in self.extensions:
+            extension.process(self, data, options)
+        return self.finish_value(options, data)
 
 
 class ConfigFileRender:

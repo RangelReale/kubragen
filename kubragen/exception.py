@@ -36,3 +36,7 @@ class MergeError(KGException):
 
 class InvalidJsonPatchError(KGException):
     pass
+
+
+class ConfigFileError(KGException):
+    pass
