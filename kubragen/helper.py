@@ -1,4 +1,4 @@
-from .exception import KGException, InvalidParamError
+from .exception import InvalidParamError
 
 
 class HelperStr(str):

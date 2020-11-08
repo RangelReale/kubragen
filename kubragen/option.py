@@ -1,7 +1,5 @@
 from enum import Enum
-from typing import Any, Optional, List, Sequence, Callable
-
-from kubragen.exception import InvalidParamError
+from typing import Any, Optional, Sequence, Callable
 
 
 class Option:

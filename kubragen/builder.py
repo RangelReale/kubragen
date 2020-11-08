@@ -45,7 +45,7 @@ class Builder:
     def object_names(self) -> Mapping[str, str]:
         return self._objectnames
 
-    def object_names_update(self, names: Mapping[str, str]) -> BuilderT:
+    def object_names_init(self, names: Mapping[str, str]) -> BuilderT:
         self._objectnames.update(names)
         return self
 

@@ -2,7 +2,7 @@ import os
 import stat
 import string
 import uuid
-from typing import Any, Dict, Optional, Sequence, List
+from typing import Any, Dict, Optional, List
 
 import yaml
 
