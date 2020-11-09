@@ -34,6 +34,7 @@ See source code for examples
 * Kube State Metrics: [kg_kubestatemetrics](https://github.com/RangelReale/kg_kubestatemetrics)
 * Loki: [kg_loki](https://github.com/RangelReale/kg_loki)
 * Promtail: [kg_promtail](https://github.com/RangelReale/kg_promtail)
+* Kube Resource Report: [kg_kuberesourcereport](https://github.com/RangelReale/kg_kuberesourcereport)
 * RabbitMQ (Online YAML download): [kg_rabbitmqonline](https://github.com/RangelReale/kg_rabbitmqonline)
 * Prometheus Stack (Prometheus, Grafana, Node Exporter, Kube State Metrics): [kg_prometheusstack](https://github.com/RangelReale/kg_prometheusstack)
 * EFK Stack (Elasticsearch, Fluentd, Kibana): [kg_efk](https://github.com/RangelReale/kg_efk)
