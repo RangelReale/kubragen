@@ -39,6 +39,9 @@ class KDataHelper_Env(KDataHelper):
         :param disable_if_none: automatically disable if value and value_if_kdata is None
         :return: a configuration compatible with the Kubernetes *container.env* specification
         """
+        if value is not None and value_if_kdata is not None:
+            raise InvalidParamError('Cannot set both "value" and "value_if_data"')
+
         if not enabled:
             return DisabledData()
 
@@ -119,6 +122,9 @@ class KDataHelper_Volume(KDataHelper):
         :param disable_if_none: automatically disable if value and value_if_kdata is None
         :return: a configuration compatible with the Kubernetes *podSpec.volume* specification
         """
+        if value is not None and value_if_kdata is not None:
+            raise InvalidParamError('Cannot set both "value" and "value_if_data"')
+
         if not enabled:
             return DisabledData()
 
