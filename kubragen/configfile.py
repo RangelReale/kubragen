@@ -32,6 +32,19 @@ class ConfigFile:
         raise NotImplementedError()
 
 
+class ConfigFile_Static(ConfigFile):
+    """
+    Static ConfigFile
+    """
+    output: ConfigFileOutput
+
+    def __init__(self, output: ConfigFileOutput):
+        self.output = output
+
+    def get_value(self, options: OptionGetter) -> ConfigFileOutput:
+        return self.output
+
+
 class ConfigFileExtensionData:
     """
     Data class for config file extensions.
