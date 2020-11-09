@@ -1,4 +1,4 @@
-from typing import Any, Sequence, Mapping, Optional
+from typing import Any, Sequence, Mapping, Optional, List
 
 import yaml
 
@@ -141,10 +141,14 @@ class ConfigFileRenderMulti(ConfigFileRender):
     """
     Config file renderer that tries multiple renderers in sequence
     """
-    renderers: Sequence[ConfigFileRender]
+    renderers: List[ConfigFileRender]
 
     def __init__(self, renderers: Sequence[ConfigFileRender]):
-        self.renderers = renderers
+        self.renderers = []
+        self.renderers.extend(renderers)
+
+    def renderer_add(self, *renderers: ConfigFileRender):
+        self.renderers.extend(renderers)
 
     def supports(self, value: ConfigFileOutput) -> bool:
         for r in self.renderers:
