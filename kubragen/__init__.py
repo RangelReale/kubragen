@@ -2,4 +2,4 @@ from .kubragen import (
     KubraGen,
 )
 
-__version__ = "0.7.19"
+__version__ = "0.7.20"
