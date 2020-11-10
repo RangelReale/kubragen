@@ -40,6 +40,10 @@ See source code for examples
 * EFK Stack (Elasticsearch, Fluentd, Kibana): [kg_efk](https://github.com/RangelReale/kg_efk)
 * Loki Stack (Loki, Promtail, Grafana): [kg_lokistack](https://github.com/RangelReale/kg_lokistack)
 
+### Providers
+
+* Core (Amazon EKS, Google GKE, DigitalOcean Kubernetes, K3D, KIND): [kgpr_core](https://github.com/RangelReale/kgpr_core)
+
 ### Plugins
 
 * Config Renderer - TOML: [kgp_configrendertoml](https://github.com/RangelReale/kgp_configrendertoml)
