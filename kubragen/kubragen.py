@@ -81,16 +81,37 @@ class KubraGen:
         return option_root_get(options, name, root_options=self.options)
 
     def resources(self) -> KResourceDatabase:
+        """
+        Returns the resource database.
+        """
         return self._resources
 
     def storageclass_build(self, *storageclassesnames: str) -> Sequence[ObjectItem]:
+        """
+        Generates one or more storage classes.
+
+        :param storageclassesnames: list of storage class names.
+        :return: list of :class:`kubragen.object.ObjectItem`
+        """
         return self.provider.objects_check(self._resources.storageclass_build(
             self.provider, *storageclassesnames))
 
     def persistentvolume_build(self, *persistentvolumenames: str) -> Sequence[ObjectItem]:
+        """
+        Generates one or more persistent volumes.
+
+        :param persistentvolumenames: list of persistent volume names
+        :return: list of :class:`kubragen.object.ObjectItem`
+        """
         return self.provider.objects_check(self._resources.persistentvolume_build(
             self.provider, *persistentvolumenames))
 
     def persistentvolumeclaim_build(self, *persistentvolumeclaimnames: str) -> Sequence[ObjectItem]:
+        """
+        Generates one or more persistent volume claims.
+
+        :param persistentvolumeclaimnames: list of persistent volume claim names
+        :return: list of :class:`kubragen.object.ObjectItem`
+        """
         return self.provider.objects_check(self._resources.persistentvolumeclaim_build(
             self.provider, *persistentvolumeclaimnames))
