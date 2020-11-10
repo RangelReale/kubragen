@@ -420,6 +420,7 @@ class KRPersistentVolumeClaimProfile_NoSelector(KRPersistentVolumeClaimProfile_D
             if persistentVolume is None:
                 raise InvalidParamError('PersistentVolumeClaim does not support selector but a PersistentVolume was not supplied')
             del ret['spec']['selector']
-            ret['spec']['volume'] = persistentVolume['metadata']['name']
+            ret['spec']['storageClassName'] = ''
+            ret['spec']['volumeName'] = persistentVolume['metadata']['name']
 
         return ret
