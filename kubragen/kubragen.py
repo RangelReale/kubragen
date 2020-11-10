@@ -1,9 +1,11 @@
-from typing import Union, Optional, Any
+from typing import Union, Optional, Any, Sequence
 
 import semver
 
 from .consts import DEFAULT_KUBERNETES_VERSION
 from .exception import InvalidParamError
+from .kresource import KResourceDatabase
+from .object import ObjectItem
 from .options import Options, option_root_get, OptionsBase
 from .provider import Provider
 
@@ -21,6 +23,7 @@ class KubraGen:
     provider: Provider
     kubernetes_version: semver.VersionInfo
     options: OptionsBase
+    _resources: KResourceDatabase
 
     def __init__(self, provider: Provider, options: Optional[OptionsBase] = None, kubernetes_version: Optional[str] = None):
         self.provider = provider
@@ -33,6 +36,7 @@ class KubraGen:
         except Exception as e:
             raise InvalidParamError(str(e)) from e
         self.options = options
+        self._resources = KResourceDatabase()
 
     def secret_data_encode(self, data: Union[bytes, str]) -> str:
         """
@@ -75,3 +79,18 @@ class KubraGen:
         :raises: :class:`kubragen.exception.TypeError`
         """
         return option_root_get(options, name, root_options=self.options)
+
+    def resources(self) -> KResourceDatabase:
+        return self._resources
+
+    def storageclass_build(self, *storageclassesnames: str) -> Sequence[ObjectItem]:
+        return self.provider.objects_check(self._resources.storageclass_build(
+            self.provider, *storageclassesnames))
+
+    def persistentvolume_build(self, *persistentvolumenames: str) -> Sequence[ObjectItem]:
+        return self.provider.objects_check(self._resources.persistentvolume_build(
+            self.provider, *persistentvolumenames))
+
+    def persistentvolumeclaim_build(self, *persistentvolumeclaimnames: str) -> Sequence[ObjectItem]:
+        return self.provider.objects_check(self._resources.persistentvolumeclaim_build(
+            self.provider, *persistentvolumeclaimnames))

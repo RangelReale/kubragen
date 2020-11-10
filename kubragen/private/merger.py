@@ -14,18 +14,18 @@ def option_check_key_exist(config, path, base, nxt):
 def option_type_conflict(config, path, base, nxt):
     if len(path) > 0:
         raise MergeError("Type conflict at '{}': {}, {}".format(
-            '.'.join(path), type(base), type(nxt)
+            '.'.join(path), repr(base), repr(nxt)
         ))
     raise MergeError("Type conflict: {}, {}".format(
-        type(base), type(nxt)
+        repr(base), repr(nxt)
     ))
 
 
 def option_merge_fallback(config, path, base, nxt):
     if len(path) > 0:
         raise MergeError("Merge fallback at '{}': {}, {}".format(
-            '.'.join(path), type(base), type(nxt)
+            '.'.join(path), repr(base), repr(nxt)
         ))
     raise MergeError("Merge fallback: {}, {}".format(
-        type(base), type(nxt)
+        repr(base), repr(nxt)
     ))

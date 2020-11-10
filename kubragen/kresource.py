@@ -1,36 +1,147 @@
-from typing import Optional, Any, Sequence, Mapping
+import copy
+from typing import Optional, Any, Sequence, Dict
 
 from kubragen.exception import InvalidParamError
 from kubragen.helper import QuotedStr
 from kubragen.merger import Merger
 from kubragen.object import ObjectItem
-from kubragen.provider import PersistentVolumeProfile, PersistentVolumeClaimProfile, Provider
+from kubragen.provider import Provider
 from kubragen.util import dict_get_value, dict_has_name
 
 
-class KResource:
+class KResourceBuilder:
+    def build(self, provider: Provider, resources: 'KResourceDatabase', name: str,
+              config: Optional[Any], merge_config: Optional[Any]) -> ObjectItem:
+        raise NotImplementedError()
+
+
+class KRStorageClass(KResourceBuilder):
     pass
 
 
-class KRStorageClass(KResource):
-    pass
+class KRPersistentVolumeProfile(KResourceBuilder):
+    storageclass: Optional[str]
+
+    def __init__(self, storageclass: Optional[str] = None):
+        self.storageclass = storageclass
 
 
-# class KRPersistentVolumeProfile(KResource):
-#     def __init__(self, storageclass: Optional[str] = None):
-#         self.storageclass = storageclass
-#
-#     def build(self, provider, config, merge_config):
-#         pass
+class KRPersistentVolumeClaimProfile(KResourceBuilder):
+    storageclass: Optional[str]
+
+    def __init__(self, storageclass: Optional[str] = None):
+        self.storageclass = storageclass
 
 
-class KRPersistentVolumeProfile_EmptyDir(PersistentVolumeProfile):
-    def build(self, provider: Provider, name: str, config: Optional[Any], merge_config: Optional[Any]) -> ObjectItem:
+class KResourceDatabase:
+    _persistentvolumeprofiles: Dict[str, KRPersistentVolumeProfile]
+    _persistentvolumeclaimprofiles: Dict[str, KRPersistentVolumeClaimProfile]
+    _storageclasses: Dict[str, Any]
+    _persistentvolumes: Dict[str, Any]
+    _persistentvolumeclaims: Dict[str, Any]
+
+    def __init__(self):
+        self._persistentvolumeprofiles = {}
+        self._persistentvolumeclaimprofiles = {}
+        self._storageclasses = {}
+        self._persistentvolumes = {}
+        self._persistentvolumeclaims = {}
+
+    def persistentvolumeprofile_add(self, name: str, profile: KRPersistentVolumeProfile):
+        self._persistentvolumeprofiles[name] = profile
+
+    def persistentvolumeclaimprofile_add(self, name: str, profile: KRPersistentVolumeClaimProfile):
+        self._persistentvolumeclaimprofiles[name] = profile
+
+    def persistentvolume_add(self, name: str, profile: str, config: Optional[Any] = None,
+                             merge_config: Optional[Any] = None):
+        self._persistentvolumes[name] = {
+            'profile': profile,
+            'config': config,
+            'merge_config': merge_config,
+        }
+
+    def persistentvolumeclaim_add(self, name: str, profile: str,
+                                  config: Optional[Any] = None, merge_config: Optional[Any] = None):
+        self._persistentvolumeclaims[name] = {
+            'profile': profile,
+            'config': config,
+            'merge_config': merge_config,
+        }
+
+    def persistentvolume_build(self, provider: Provider, *persistentvolumenames: str) -> Sequence[ObjectItem]:
+        ret = []
+        for pvname, pvdata in self._persistentvolumes.items():
+            if len(persistentvolumenames) == 0 or pvname in persistentvolumenames:
+                ret.append(self._persistentvolumeprofiles[pvdata['profile']].build(provider, self, pvname, pvdata['config'], pvdata['merge_config']))
+        return ret
+
+    def persistentvolumeclaim_build(self, provider: Provider, *persistentvolumeclaimnames: str) -> Sequence[ObjectItem]:
+        ret = []
+        for pvcname, pvcdata in self._persistentvolumeclaims.items():
+            if len(persistentvolumeclaimnames) == 0 or pvcname in persistentvolumeclaimnames:
+                ret.append(self._persistentvolumeclaimprofiles[pvcdata['profile']].build(provider, self, pvcname, pvcdata['config'], pvcdata['merge_config']))
+        return ret
+
+    def storageclass_add(self, name, storageclass: KRStorageClass, config: Optional[Any] = None,
+                             merge_config: Optional[Any] = None):
+        self._storageclasses[name] = {
+            'storageclass': storageclass,
+            'config': config,
+            'merge_config': merge_config,
+        }
+
+    def storageclass_build(self, provider: Provider, *storageclassesnames: str) -> Sequence[ObjectItem]:
+        ret = []
+        for scname, scvalue in self._storageclasses.items():
+            if len(storageclassesnames) == 0 or scname in storageclassesnames:
+                ret.append(scvalue['storageclass'].build(provider, self, scname, scvalue['config'], scvalue['merge_config']))
+        return copy.deepcopy(ret)
+
+
+class KRStorageClass_Default(KRStorageClass):
+    def build(self, provider: Provider, resources: 'KResourceDatabase', name: str,
+              config: Optional[Any], merge_config: Optional[Any]) -> ObjectItem:
         if config is not None:
             if 'name' in config:
                 name = config['name']
 
         ret = Merger.merge({
+            'apiVersion': 'storage.k8s.io/v1',
+            'kind': 'StorageClass',
+            'metadata': {
+                'name': name,
+            },
+        }, merge_config if merge_config is not None else {})
+
+        return ret
+
+
+class KRPersistentVolumeProfile_Default(KRPersistentVolumeProfile):
+    def build(self, provider: Provider, resources: 'KResourceDatabase', name: str,
+              config: Optional[Any], merge_config: Optional[Any]) -> ObjectItem:
+        pvdata = {
+            'apiVersion': 'v1',
+            'kind': 'PersistentVolume',
+            'metadata': {
+                'name': name,
+            },
+            'spec': {
+            },
+        }
+        if self.storageclass is not None:
+            pvdata['spec']['storageClassName'] = self.storageclass
+        if config is not None:
+            if 'name' in config:
+                pvdata['metadata']['name'] = config['name']
+
+        return Merger.merge(pvdata, merge_config if merge_config is not None else {})
+
+
+class KRPersistentVolumeProfile_EmptyDir(KRPersistentVolumeProfile):
+    def build(self, provider: Provider, resources: 'KResourceDatabase', name: str,
+              config: Optional[Any], merge_config: Optional[Any]) -> ObjectItem:
+        pvdata = {
             'apiVersion': 'v1',
             'kind': 'PersistentVolume',
             'metadata': {
@@ -39,284 +150,190 @@ class KRPersistentVolumeProfile_EmptyDir(PersistentVolumeProfile):
             'spec': {
                 'emptyDir': {}
             },
-        }, merge_config if merge_config is not None else {})
-
+        }
         if self.storageclass is not None:
-            Merger.merge(ret, {
-                'spec': {
-                    'storageClassName': self.storageclass,
-                }
-            })
-
-        return ret
-
-
-class KRPersistentVolumeProfile_HostPath(PersistentVolumeProfile):
-    def build(self, provider: Provider, name: str, config: Optional[Any], merge_config: Optional[Any]) -> ObjectItem:
-        hostPath = None
+            pvdata['spec']['storageClassName'] = self.storageclass
         if config is not None:
             if 'name' in config:
-                name = config['name']
-            if 'hostPath' in config:
-                hostPath = config['hostPath']
-        if hostPath is None:
-            raise InvalidParamError('"hostPath" config is required')
+                pvdata['metadata']['name'] = config['name']
 
-        ret = Merger.merge({
+        return Merger.merge(pvdata, merge_config if merge_config is not None else {})
+
+
+class KRPersistentVolumeProfile_HostPath(KRPersistentVolumeProfile):
+    def build(self, provider: Provider, resources: 'KResourceDatabase', name: str,
+              config: Optional[Any], merge_config: Optional[Any]) -> ObjectItem:
+        pvdata = {
             'apiVersion': 'v1',
             'kind': 'PersistentVolume',
             'metadata': {
                 'name': name,
             },
             'spec': {
-                'hostPath': hostPath,
+                'hostPath': None,
             },
-        }, merge_config if merge_config is not None else {})
-
+        }
         if self.storageclass is not None:
-            Merger.merge(ret, {
-                'spec': {
-                    'storageClassName': self.storageclass,
-                }
-            })
+            pvdata['spec']['storageClassName'] = self.storageclass
+
+        if config is not None:
+            if 'name' in config:
+                pvdata['metadata']['name'] = config['name']
+            if 'hostPath' in config:
+                pvdata['spec']['hostPath'] = config['hostPath']
+
+        ret = Merger.merge(pvdata, merge_config if merge_config is not None else {})
+
+        if ret['spec']['hostPath'] is None:
+            raise InvalidParamError('"hostPath" is required')
 
         return ret
 
 
-
-class KRPersistentVolumeProfile_NFS(PersistentVolumeProfile):
-    def build(self, provider: Provider, name: str, config: Optional[Any], merge_config: Optional[Any]) -> ObjectItem:
-        nfs = None
+class KRPersistentVolumeProfile_NFS(KRPersistentVolumeProfile):
+    def build(self, provider: Provider, resources: 'KResourceDatabase', name: str,
+              config: Optional[Any], merge_config: Optional[Any]) -> ObjectItem:
+        pvdata = {
+            'apiVersion': 'v1',
+            'kind': 'PersistentVolume',
+            'metadata': {
+                'name': name,
+            },
+            'spec': {
+                'nfs': None,
+            },
+        }
+        if self.storageclass is not None:
+            pvdata['spec']['storageClassName'] = self.storageclass
         if config is not None:
             if 'name' in config:
-                name = config['name']
+                pvdata['metadata']['name'] = config['name']
             if 'nfs' in config:
-                nfs = config['nfs']
-        if nfs is None:
+                pvdata['spec']['nfs'] = config['nfs']
+
+        ret = Merger.merge(pvdata, merge_config if merge_config is not None else {})
+
+        if ret['spec']['nfs'] is None:
             raise InvalidParamError('"nfs" config is required')
 
-        ret = Merger.merge({
+        return ret
+
+
+class KRPersistentVolumeProfile_CSI(KRPersistentVolumeProfile):
+    def build(self, provider: Provider, resources: 'KResourceDatabase', name: str,
+              config: Optional[Any], merge_config: Optional[Any]) -> ObjectItem:
+        pvdata = {
             'apiVersion': 'v1',
             'kind': 'PersistentVolume',
             'metadata': {
                 'name': name,
             },
             'spec': {
-                'nfs': nfs,
+                'csi': None,
             },
-        }, merge_config if merge_config is not None else {})
-
+        }
         if self.storageclass is not None:
-            Merger.merge(ret, {
-                'spec': {
-                    'storageClassName': self.storageclass,
-                }
-            })
-
-        return ret
-
-
-class KRPersistentVolumeProfile_CSI(PersistentVolumeProfile):
-    def build(self, provider: Provider, name: str, config: Optional[Any], merge_config: Optional[Any]) -> ObjectItem:
-        csi = None
+            pvdata['spec']['storageClassName'] = self.storageclass
         if config is not None:
             if 'name' in config:
-                name = config['name']
+                pvdata['metadata']['name'] = config['name']
             if 'csi' in config:
-                csi = config['csi']
-        if csi is None:
+                pvdata['spec']['csi'] = config['csi']
+
+        ret = Merger.merge(pvdata, merge_config if merge_config is not None else {})
+
+        if ret['spec']['csi'] is None:
             raise InvalidParamError('"csi" config is required')
 
-        ret = Merger.merge({
+        return ret
+
+
+class KRPersistentVolumeProfile_AWSElasticBlockStore(KRPersistentVolumeProfile):
+    def build(self, provider: Provider, resources: 'KResourceDatabase', name: str,
+              config: Optional[Any], merge_config: Optional[Any]) -> ObjectItem:
+        pvdata = {
             'apiVersion': 'v1',
             'kind': 'PersistentVolume',
             'metadata': {
                 'name': name,
             },
             'spec': {
-                'csi': csi,
+                'awsElasticBlockStore': {},
             },
-        }, merge_config if merge_config is not None else {})
-
+        }
         if self.storageclass is not None:
-            Merger.merge(ret, {
-                'spec': {
-                    'storageClassName': self.storageclass,
-                }
-            })
-
-        return ret
-
-
-class KRPersistentVolumeProfile_AWSElasticBlockStore(PersistentVolumeProfile):
-    def build(self, provider: Provider, name: str, config: Optional[Any], merge_config: Optional[Any]) -> ObjectItem:
-        specdata = {}
+            pvdata['spec']['storageClassName'] = self.storageclass
         if config is not None:
             if 'name' in config:
-                name = config['name']
+                pvdata['metadata']['name'] = config['name']
             if 'csi' in config:
                 if 'volumeHandle' in config['csi']:
-                    specdata['volumeID'] = config['csi']['volumeHandle']
+                    pvdata['spec']['awsElasticBlockStore']['volumeID'] = config['csi']['volumeHandle']
                 if 'fsType' in config['csi']:
-                    specdata['fsType'] = config['csi']['fsType']
+                    pvdata['spec']['awsElasticBlockStore']['fsType'] = config['csi']['fsType']
                 if 'readOnly' in config['csi']:
-                    specdata['readOnly'] = config['csi']['readOnly']
+                    pvdata['spec']['awsElasticBlockStore']['readOnly'] = config['csi']['readOnly']
 
-        ret = Merger.merge({
-            'apiVersion': 'v1',
-            'kind': 'PersistentVolume',
-            'metadata': {
-                'name': name,
-            },
-            'spec': {
-                'awsElasticBlockStore': specdata,
-            },
-        }, merge_config if merge_config is not None else {})
-
-        if self.storageclass is not None:
-            Merger.merge(ret, {
-                'spec': {
-                    'storageClassName': self.storageclass,
-                }
-            })
-
-        return ret
+        return Merger.merge(pvdata, merge_config if merge_config is not None else {})
 
 
 class KRPersistentVolumeProfile_CSI_AWSEBS(KRPersistentVolumeProfile_CSI):
-    def build(self, provider: Provider, name: str, config: Optional[Any], merge_config: Optional[Any]) -> ObjectItem:
-        specdata = {
-            'driver': 'ebs.csi.aws.com',
-        }
+    def build(self, provider: Provider, resources: 'KResourceDatabase', name: str,
+              config: Optional[Any], merge_config: Optional[Any]) -> ObjectItem:
+        ret = super().build(provider, resources, name, config, merge_config)
+        ret['spec']['csi']['driver'] = 'ebs.csi.aws.com'
         if config is not None:
-            if 'name' in config:
-                name = config['name']
             if 'nodriver' in config and config['nodriver'] is True:
-                del specdata['driver']
-            if 'csi' in config:
-                Merger.merge(specdata, config['csi'])
-
-        ret = Merger.merge({
-            'apiVersion': 'v1',
-            'kind': 'PersistentVolume',
-            'metadata': {
-                'name': name,
-            },
-            'spec': {
-                'csi': specdata,
-            },
-        }, merge_config if merge_config is not None else {})
-
-        if self.storageclass is not None:
-            Merger.merge(ret, {
-                'spec': {
-                    'storageClassName': self.storageclass,
-                }
-            })
-
+                del ret['spec']['csi']['driver']
         return ret
 
 
 class KRPersistentVolumeProfile_CSI_AWSEFS(KRPersistentVolumeProfile_CSI):
-    def build(self, provider: Provider, name: str, config: Optional[Any], merge_config: Optional[Any]) -> ObjectItem:
-        specdata = {
-            'driver': 'efs.csi.aws.com',
+    def build(self, provider: Provider, resources: 'KResourceDatabase', name: str,
+              config: Optional[Any], merge_config: Optional[Any]) -> ObjectItem:
+        ret = super().build(provider, resources, name, config, merge_config)
+        ret['spec']['csi']['driver'] = 'efs.csi.aws.com'
+        if config is not None:
+            if 'nodriver' in config and config['nodriver'] is True:
+                del ret['spec']['csi']['driver']
+        return ret
+
+
+class KRPersistentVolumeProfile_GCEPersistentDisk(KRPersistentVolumeProfile):
+    def build(self, provider: Provider, resources: 'KResourceDatabase', name: str,
+              config: Optional[Any], merge_config: Optional[Any]) -> ObjectItem:
+        pvdata = {
+            'apiVersion': 'v1',
+            'kind': 'PersistentVolume',
+            'metadata': {
+                'name': name,
+            },
+            'spec': {
+                'gcePersistentDisk': {},
+            },
         }
         if config is not None:
             if 'name' in config:
-                name = config['name']
-            if 'nodriver' in config and config['nodriver'] is True:
-                del specdata['driver']
-            if 'csi' in config:
-                Merger.merge(specdata, config['csi'])
-
-        ret = Merger.merge({
-            'apiVersion': 'v1',
-            'kind': 'PersistentVolume',
-            'metadata': {
-                'name': name,
-            },
-            'spec': {
-                'csi': specdata,
-            },
-        }, merge_config if merge_config is not None else {})
-
-        if self.storageclass is not None:
-            Merger.merge(ret, {
-                'spec': {
-                    'storageClassName': self.storageclass,
-                }
-            })
-
-        return ret
-
-
-class KRPersistentVolumeProfile_GCEPersistentDisk(PersistentVolumeProfile):
-    def build(self, provider: Provider, name: str, config: Optional[Any], merge_config: Optional[Any]) -> ObjectItem:
-        specdata = {}
-        if config is not None:
-            if 'name' in config:
-                name = config['name']
+                pvdata['metadata']['name'] = config['name']
             if 'csi' in config:
                 if 'volumeHandle' in config['csi']:
-                    specdata['pdName'] = config['csi']['volumeHandle']
+                    pvdata['spec']['gcePersistentDisk']['pdName'] = config['csi']['volumeHandle']
                 if 'fsType' in config['csi']:
-                    specdata['fsType'] = config['csi']['fsType']
+                    pvdata['spec']['gcePersistentDisk']['fsType'] = config['csi']['fsType']
                 if 'readOnly' in config['csi']:
-                    specdata['readOnly'] = config['csi']['readOnly']
+                    pvdata['spec']['gcePersistentDisk']['readOnly'] = config['csi']['readOnly']
 
-        ret = Merger.merge({
-            'apiVersion': 'v1',
-            'kind': 'PersistentVolume',
-            'metadata': {
-                'name': name,
-            },
-            'spec': {
-                'gcePersistentDisk': specdata,
-            },
-        }, merge_config if merge_config is not None else {})
-
-        if self.storageclass is not None:
-            Merger.merge(ret, {
-                'spec': {
-                    'storageClassName': self.storageclass,
-                }
-            })
-
-        return ret
+        return Merger.merge(pvdata, merge_config if merge_config is not None else {})
 
 
 class KRPersistentVolumeProfile_CSI_GCEPD(KRPersistentVolumeProfile_CSI):
-    def build(self, provider: Provider, name: str, config: Optional[Any], merge_config: Optional[Any]) -> ObjectItem:
-        specdata = {
-            'driver': 'pd.csi.storage.gke.io',
-        }
+    def build(self, provider: Provider, resources: 'KResourceDatabase', name: str,
+              config: Optional[Any], merge_config: Optional[Any]) -> ObjectItem:
+        ret = super().build(provider, resources, name, config, merge_config)
+        ret['spec']['csi']['driver'] = 'pd.csi.storage.gke.io'
         if config is not None:
-            if 'name' in config:
-                name = config['name']
             if 'nodriver' in config and config['nodriver'] is True:
-                del specdata['driver']
-            if 'csi' in config:
-                Merger.merge(specdata, config['csi'])
-
-        ret = Merger.merge({
-            'apiVersion': 'v1',
-            'kind': 'PersistentVolume',
-            'metadata': {
-                'name': name,
-            },
-            'spec': {
-                'csi': specdata,
-            },
-        }, merge_config if merge_config is not None else {})
-
-        if self.storageclass is not None:
-            Merger.merge(ret, {
-                'spec': {
-                    'storageClassName': self.storageclass,
-                }
-            })
-
+                del ret['spec']['csi']['driver']
         return ret
 
 
@@ -327,37 +344,22 @@ class KRPersistentVolumeProfile_CSI_DOBS(KRPersistentVolumeProfile_CSI):
         super().__init__(storageclass)
         self.noformat = noformat
 
-    def build(self, provider: Provider, name: str, config: Optional[Any], merge_config: Optional[Any]) -> ObjectItem:
-        specdata = {
-            'driver': 'dobs.csi.digitalocean.com',
-        }
+    def build(self, provider: Provider, resources: 'KResourceDatabase', name: str,
+              config: Optional[Any], merge_config: Optional[Any]) -> ObjectItem:
+        ret = super().build(provider, resources, name, config, merge_config)
+        ret['spec']['csi']['driver'] = 'dobs.csi.digitalocean.com'
         if config is not None:
-            if 'name' in config:
-                name = config['name']
             if 'nodriver' in config and config['nodriver'] is True:
-                del specdata['driver']
-            if 'csi' in config:
-                Merger.merge(specdata, config['csi'])
+                del ret['spec']['csi']['driver']
 
         if self.noformat is not None:
-            if 'volumeAttributes' not in specdata:
-                specdata['volumeAttributes'] = {}
-            if 'com.digitalocean.csi/noformat' not in specdata['volumeAttributes']:
-                specdata['volumeAttributes']['com.digitalocean.csi/noformat'] = QuotedStr(
+            if 'volumeAttributes' not in ret['spec']['csi']:
+                ret['spec']['csi']['volumeAttributes'] = {}
+            if 'com.digitalocean.csi/noformat' not in ret['spec']['csi']['volumeAttributes']:
+                ret['spec']['csi']['volumeAttributes']['com.digitalocean.csi/noformat'] = QuotedStr(
                     'false' if self.noformat is False else 'true')
 
-        ret = Merger.merge({
-            'apiVersion': 'v1',
-            'kind': 'PersistentVolume',
-            'metadata': {
-                'name': name,
-            },
-            'spec': {
-                'csi': specdata,
-            },
-        }, merge_config if merge_config is not None else {})
-
-        if 'volumeHandle' in specdata and specdata['volumeHandle'] is not None:
+        if 'volumeHandle' in ret['spec']['csi'] and ret['spec']['csi']['volumeHandle'] is not None:
             # https://github.com/digitalocean/csi-digitalocean/blob/master/examples/kubernetes/pod-single-existing-volume/README.md
             Merger.merge(ret, {
                 'metadata': {
@@ -367,32 +369,16 @@ class KRPersistentVolumeProfile_CSI_DOBS(KRPersistentVolumeProfile_CSI):
                 }
             })
 
-        storageclass = 'do-block-storage'
-        if self.storageclass is not None:
-            storageclass = self.storageclass
-
-        Merger.merge(ret, {
-            'spec': {
-                'storageClassName': storageclass,
-            }
-        })
+        if 'storageClassName' not in ret['spec']:
+            ret['spec']['storageClassName'] = 'do-block-storage'
 
         return ret
 
 
-class KRPersistentVolumeClaimProfile_Default(PersistentVolumeClaimProfile):
-    def build(self, provider: Provider, name: str, config: Optional[Any], merge_config: Optional[Any]) -> ObjectItem:
-        namespace = None
-        persistentVolume: Optional[ObjectItem] = None
-        if config is not None:
-            if 'name' in config:
-                name = config['name']
-            if 'namespace' in config:
-                namespace = config['namespace']
-            if 'persistentVolume' in config:
-                persistentVolume = provider.persistentvolume_build(config['persistentVolume'])[0]
-
-        pvdata = {
+class KRPersistentVolumeClaimProfile_Default(KRPersistentVolumeClaimProfile):
+    def build(self, provider: Provider, resources: 'KResourceDatabase', name: str,
+              config: Optional[Any], merge_config: Optional[Any]) -> ObjectItem:
+        pvcdata = {
             'apiVersion': 'v1',
             'kind': 'PersistentVolumeClaim',
             'metadata': {
@@ -401,23 +387,29 @@ class KRPersistentVolumeClaimProfile_Default(PersistentVolumeClaimProfile):
             'spec': {
             },
         }
-        if namespace is not None:
-            pvdata['metadata']['namespace'] = namespace
         if self.storageclass is not None:
-            pvdata['spec']['storageClassName'] = self.storageclass
+            pvcdata['spec']['storageClassName'] = self.storageclass
+
+        persistentVolume: Optional[ObjectItem] = None
+        if config is not None:
+            if 'name' in config:
+                pvcdata['metadata']['name'] = config['name']
+            if 'namespace' in config:
+                pvcdata['metadata']['namespace'] = config['namespace']
+            if 'persistentVolume' in config:
+                persistentVolume = resources.persistentvolume_build(config['persistentVolume'])[0]
+
         if persistentVolume is not None:
             if dict_has_name(persistentVolume, 'spec.storageClassName'):
                 pv_storageclassname = dict_get_value(persistentVolume, 'spec.storageClassName')
                 if pv_storageclassname is not None:
-                    pvdata['spec']['storageClassName'] = pv_storageclassname
+                    pvcdata['spec']['storageClassName'] = pv_storageclassname
 
-        ret = Merger.merge(pvdata, merge_config if merge_config is not None else {})
+            if not dict_has_name(pvcdata, 'spec.accessModes') and dict_has_name(persistentVolume, 'spec.accessModes'):
+                pvcdata['spec']['accessModes'] = persistentVolume['spec']['accessModes']
 
-        if persistentVolume is not None:
-            if not dict_has_name(ret, 'spec.accessModes') and dict_has_name(persistentVolume, 'spec.accessModes'):
-                ret['spec']['accessModes'] = persistentVolume['spec']['accessModes']
-            if not dict_has_name(ret, 'spec.resources.requests.storage') and dict_has_name(persistentVolume, 'spec.capacity.storage'):
-                Merger.merge(ret, {
+            if not dict_has_name(pvcdata, 'spec.resources.requests.storage') and dict_has_name(persistentVolume, 'spec.capacity.storage'):
+                Merger.merge(pvcdata, {
                     'spec': {
                         'resources': {
                             'requests': {
@@ -427,4 +419,4 @@ class KRPersistentVolumeClaimProfile_Default(PersistentVolumeClaimProfile):
                     }
                 })
 
-        return ret
+        return Merger.merge(pvcdata, merge_config if merge_config is not None else {})
