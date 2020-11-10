@@ -378,7 +378,7 @@ class KRPersistentVolumeClaimProfile_Default(KRPersistentVolumeClaimProfile):
             if 'namespace' in config:
                 pvcdata['metadata']['namespace'] = config['namespace']
             if 'persistentVolume' in config:
-                persistentVolume = resources.persistentvolume_build(config['persistentVolume'])[0]
+                persistentVolume = resources.persistentvolume_build(provider, config['persistentVolume'])[0]
 
         if persistentVolume is not None:
             if dict_has_name(persistentVolume, 'spec.storageClassName'):
@@ -401,3 +401,25 @@ class KRPersistentVolumeClaimProfile_Default(KRPersistentVolumeClaimProfile):
                 })
 
         return Merger.merge(pvcdata, merge_config if merge_config is not None else {})
+
+
+class KRPersistentVolumeClaimProfile_NoSelector(KRPersistentVolumeClaimProfile_Default):
+    """
+    Persistent volume claim profile that does not allow using selectors.
+    """
+    def build(self, provider: Provider, resources: 'KResourceDatabase', name: str,
+              config: Optional[Any], merge_config: Optional[Any]) -> ObjectItem:
+        ret = super().build(provider, resources, name, config, merge_config)
+
+        persistentVolume: Optional[ObjectItem] = None
+        if config is not None:
+            if 'persistentVolume' in config:
+                persistentVolume = resources.persistentvolume_build(provider, config['persistentVolume'])[0]
+
+        if 'selector' in ret['spec']:
+            if persistentVolume is None:
+                raise InvalidParamError('PersistentVolumeClaim does not support selector but a PersistentVolume was not supplied')
+            del ret['spec']['selector']
+            ret['spec']['volume'] = persistentVolume['metadata']['name']
+
+        return ret
