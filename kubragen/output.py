@@ -117,6 +117,8 @@ class OutputFile:
         """
         ret = []
         for d in self.data:
+            if d is None:
+                continue
             ret.append(dumper.dump(d))
         return '\n'.join(ret)
 
@@ -218,10 +220,14 @@ class OutputFile_Yaml(OutputFile):
     No special Kubernetes-specific options will be applied.
     """
     def to_string(self, dumper: OutputDataDumper) -> str:
+        if self.data is None:
+            return ''
         yaml_dump_params = {'default_flow_style': False, 'sort_keys': False}
         ret = []
         is_first: bool = True
         for d in self.data:
+            if d is None:
+                continue
             if not is_first:
                 ret.append('---')
             if isinstance(d, list) and len(d) == 0:
@@ -243,10 +249,14 @@ class OutputFile_Kubernetes(OutputFile):
     Special Kubernetes-specific options will be applied.
     """
     def to_string(self, dumper: OutputDataDumper) -> str:
+        if self.data is None:
+            return ''
         yd = YamlGenerator(dumper.kg)
         ret = []
         is_first: bool = True
         for d in self.data:
+            if d is None:
+                continue
             if isinstance(d, OD_Raw):
                 ret.append(dumper.dump(d))
                 continue
