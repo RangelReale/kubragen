@@ -252,4 +252,4 @@ if it returns False.
 
 ## Author
 
-Rangel Reale (rangelspam@gmail.com)
+Rangel Reale (rangelreale@gmail.com)

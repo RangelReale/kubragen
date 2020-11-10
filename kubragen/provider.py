@@ -45,6 +45,12 @@ class Provider:
         return base64.b64encode(data)
 
     def objects_check(self, objects: Sequence[ObjectItem]) -> Sequence[ObjectItem]:
+        """
+        Checks and modifies the list of objects for provider-specific properties.
+
+        :param objects: list of :class:`kubragen.object.ObjectItem`
+        :return: the modified list of objects.
+        """
         return objects
 
 
