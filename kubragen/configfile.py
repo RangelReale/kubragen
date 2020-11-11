@@ -2,6 +2,7 @@ from typing import Any, Sequence, Mapping, Optional, List
 
 import yaml
 
+from kubragen.data import DataClean
 from kubragen.exception import NotSupportedError
 from kubragen.options import OptionGetter
 from kubragen.util import dict_flatten
@@ -79,14 +80,13 @@ class ConfigFile_Extend(ConfigFile):
 
     :param extensions: the initial extensions
     """
-    extensions: Sequence[ConfigFileExtension]
+    extensions: List[ConfigFileExtension]
 
     def __init__(self, extensions: Optional[Sequence[ConfigFileExtension]] = None):
         super().__init__()
+        self.extensions = []
         if extensions is not None:
-            self.extensions = extensions
-        else:
-            self.extensions = []
+            self.extensions.extend(extensions)
 
     def extension_add(self, *parts: ConfigFileExtension) -> None:
         """
@@ -143,6 +143,10 @@ class ConfigFileRender:
         """
         Renders a configuration file.
 
+        .. note::
+            You **MUST** call :func:`kubragen.data.DataClean` with ```(in_place=False)``` on the value object before
+            rendering, otherwise the :clas::`kubragen.data.Data` objects will remain on the output.
+
         :param value: config file contents/output
         :return: config file contents rendered as a str
         :raises: `kubragen.exception.NotSupportedError`
@@ -172,7 +176,7 @@ class ConfigFileRenderMulti(ConfigFileRender):
     def render(self, value: ConfigFileOutput) -> str:
         for r in self.renderers:
             if r.supports(value):
-                return r.render(value)
+                return r.render(DataClean(value, in_place=False))
         return super().render(value)
 
 
@@ -245,7 +249,7 @@ class ConfigFileRender_RawStr(ConfigFileRender):
     def render(self, value: ConfigFileOutput) -> str:
         if isinstance(value, ConfigFileOutput_RawStr):
             return str(value.value)
-        super().render(value)
+        return super().render(value)
 
 
 class ConfigFileRender_SysCtl(ConfigFileRender):
@@ -274,8 +278,8 @@ class ConfigFileRender_SysCtl(ConfigFileRender):
 
     def render(self, value: ConfigFileOutput) -> str:
         if self.supports(value):
-            return self.render_dict(value.value)
-        super().render(value)
+            return self.render_dict(DataClean(value.value, in_place=False))
+        return super().render(value)
 
 
 class ConfigFileRender_Yaml(ConfigFileRender):
@@ -297,5 +301,5 @@ class ConfigFileRender_Yaml(ConfigFileRender):
 
     def render(self, value: ConfigFileOutput) -> str:
         if self.supports(value):
-            return self.render_yaml(value.value)
-        super().render(value)
+            return self.render_yaml(DataClean(value.value, in_place=False))
+        return super().render(value)

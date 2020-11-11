@@ -68,6 +68,17 @@ class KubraGen:
         """
         return True
 
+    def option_get(self, name: str) -> Any:
+        """
+        Get an option value using the from the :class:`KubraGen' instance
+
+        :param name: the option name in dot format (namespace.mon)
+        :return: the option value
+        :raises: :class:`kubragen.exception.OptionError`
+        :raises: :class:`kubragen.exception.TypeError`
+        """
+        return self.options.value_get(name)
+
     def option_root_get(self, options: Options, name: str) -> Any:
         """
         Get an option value using the root options if requested using :class:`OptionRoot`
