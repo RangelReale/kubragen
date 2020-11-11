@@ -16,25 +16,17 @@ class KubraGen:
 
     :param provider: Target Kubernetes provider
     :param options: Global options to be referenced in builders using :class:`kubragen.option.OptionRoot`
-    :param kubernetes_version: Target Kubernetes version, to be parsed using the :mod:`semver` module
 
     :raises: :class:`kubragen.exception.InvalidParamError`
     """
     provider: Provider
-    kubernetes_version: semver.VersionInfo
     options: OptionsBase
     _resources: KResourceDatabase
 
-    def __init__(self, provider: Provider, options: Optional[OptionsBase] = None, kubernetes_version: Optional[str] = None):
+    def __init__(self, provider: Provider, options: Optional[OptionsBase] = None):
         self.provider = provider
         if options is None:
             options = Options({})
-        if kubernetes_version is None:
-            kubernetes_version = DEFAULT_KUBERNETES_VERSION
-        try:
-            self.kubernetes_version = semver.VersionInfo.parse(kubernetes_version)
-        except Exception as e:
-            raise InvalidParamError(str(e)) from e
         self.options = options
         self._resources = KResourceDatabase()
 

@@ -1,7 +1,10 @@
 import base64
-from typing import Union, Sequence
+from typing import Union, Sequence, Optional
 
-from .consts import PROVIDER_GENERIC, PROVIDERSVC_GENERIC
+import semver
+
+from .consts import PROVIDER_GENERIC, PROVIDERSVC_GENERIC, DEFAULT_KUBERNETES_VERSION
+from .exception import InvalidParamError
 from .object import ObjectItem
 from .types import TProvider, TProviderSvc
 
@@ -12,13 +15,25 @@ class Provider:
 
     :param provider: The service provider (Google, Amazon, etc)
     :param service: The Kubernetes service in the service provider (GKE, EKS, etc)
+    :param kubernetes_version: Target Kubernetes version, to be parsed using the :mod:`semver` module
     """
     provider: TProvider
     service: TProviderSvc
+    kubernetes_version: semver.VersionInfo
 
-    def __init__(self, provider: TProvider, service: TProviderSvc):
+    def __init__(self, provider: TProvider, service: TProviderSvc,
+                 kubernetes_version: Optional[Union[str, semver.VersionInfo]] = None):
         self.provider = provider
         self.service = service
+        if kubernetes_version is None:
+            kubernetes_version = DEFAULT_KUBERNETES_VERSION
+        if isinstance(kubernetes_version, semver.VersionInfo):
+            self.kubernetes_version = kubernetes_version
+        else:
+            try:
+                self.kubernetes_version = semver.VersionInfo.parse(kubernetes_version)
+            except Exception as e:
+                raise InvalidParamError(str(e)) from e
 
     def secret_data_encode(self, data: Union[bytes, str]) -> str:
         """
@@ -58,5 +73,5 @@ class Provider_Generic(Provider):
     """
     A generic provider.
     """
-    def __init__(self):
-        super().__init__(provider=PROVIDER_GENERIC, service=PROVIDERSVC_GENERIC)
+    def __init__(self, kubernetes_version: Optional[Union[str, semver.VersionInfo]] = None):
+        super().__init__(provider=PROVIDER_GENERIC, service=PROVIDERSVC_GENERIC, kubernetes_version=kubernetes_version)
