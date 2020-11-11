@@ -22,6 +22,10 @@ See source code for examples
 * Documentation: https://kubragen.readthedocs.org/
 * PyPI: https://pypi.python.org/pypi/kubragen
 
+### Samples
+
+* Real-world samples: [kubragen_samples](https://github.com/RangelReale/kubragen_samples)
+
 ### Builders
 
 * RabbitMQ: [kg_rabbitmq](https://github.com/RangelReale/kg_rabbitmq)
