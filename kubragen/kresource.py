@@ -434,12 +434,14 @@ class KRPersistentVolumeClaimProfile_Basic(KRPersistentVolumeClaimProfile):
                     }
                 })
 
+        ret = Merger.merge(pvcdata, merge_config if merge_config is not None else {})
+
         if not self.allow_selector:
-            if 'selector' in pvcdata['spec']:
+            if 'selector' in ret['spec']:
                 if persistentVolume is None:
                     raise InvalidParamError('PersistentVolumeClaim does not support selector but a PersistentVolume was not supplied')
-                del pvcdata['spec']['selector']
-                pvcdata['spec']['storageClassName'] = ''
-                pvcdata['spec']['volumeName'] = persistentVolume['metadata']['name']
+                del ret['spec']['selector']
+                ret['spec']['storageClassName'] = ''
+                ret['spec']['volumeName'] = persistentVolume['metadata']['name']
 
-        return Merger.merge(pvcdata, merge_config if merge_config is not None else {})
+        return ret
