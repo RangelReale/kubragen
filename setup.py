@@ -25,9 +25,9 @@ setuptools.setup(
     url="https://github.com/RangelReale/kubragen",
     package_data={'kubragen': ['py.typed']},
     packages=['kubragen', 'kubragen.private', 'kubragen.cmd', 'kubragen.tests'],
+    zip_safe=False,
     install_requires=INSTALL_REQUIRES,
     test_suite="kubragen.tests",
-    zip_safe=False,
     classifiers=[
         "Programming Language :: Python :: 3",
         "License :: OSI Approved :: MIT License",

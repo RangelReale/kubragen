@@ -63,6 +63,15 @@ class Builder:
         """
         return self._objectnames
 
+    def object_exists(self, name: str) -> bool:
+        """
+        Checks whether the object exists.
+
+        :param name: name to search for
+        :return: whether the object exists
+        """
+        return name in self._objectnames
+
     def object_names_init(self: BuilderT, names: Mapping[str, str]) -> BuilderT:
         """
         Initialize object names.

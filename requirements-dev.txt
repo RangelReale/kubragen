@@ -4,3 +4,4 @@ sphinx-rtd-theme
 m2r2
 bump2version
 twine
+mypy
