@@ -1,5 +1,5 @@
-import deepmerge # type: ignore
-from deepmerge.exception import InvalidMerge # type: ignore
+import deepmerge  # type: ignore
+from deepmerge.exception import InvalidMerge  # type: ignore
 
 from ..exception import OptionError, MergeError
 

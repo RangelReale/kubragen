@@ -129,7 +129,6 @@ class ConfigFileRender:
     """
     A renderer for a config file
     """
-
     def supports(self, value: ConfigFileOutput) -> bool:
         """
         Checks whether this renderer supports the config file output.

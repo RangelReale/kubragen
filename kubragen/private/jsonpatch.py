@@ -1,5 +1,5 @@
-import deepmerge # type: ignore
-import jsonpatchext # type: ignore
+import deepmerge  # type: ignore
+import jsonpatchext  # type: ignore
 
 from ..data import Data
 from ..helper import HelperStr, HelperStrNewInstance

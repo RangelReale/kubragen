@@ -1,4 +1,4 @@
-import deepmerge # type: ignore
+import deepmerge  # type: ignore
 
 from .private.merger import option_check_key_exist, option_merge_fallback, option_type_conflict
 

@@ -2,7 +2,6 @@ import copy
 from typing import Optional, Any, Sequence, Dict
 
 from kubragen.exception import InvalidParamError
-from kubragen.helper import QuotedStr
 from kubragen.merger import Merger
 from kubragen.object import ObjectItem
 from kubragen.provider import Provider

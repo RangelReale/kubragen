@@ -24,16 +24,6 @@ class Data:
         """
         raise NotImplementedError()
 
-    def __getitem__(self, key):
-        """Simulate dict/list access for the data value."""
-        if not self.is_enabled():
-            raise KeyError('Key "{}" not found because data is disabled'.format(key))
-        if isinstance(self.get_value(), Mapping):
-            return self.get_value()[key]
-        elif isinstance(self.get_value(), Sequence):
-            return self.get_value()[key]
-        raise KeyError('Key "{}" not found because data is not dict or list'.format(key))
-
 
 class DisabledData(Data):
     """A :class:`Data` class that is always disabled."""
