@@ -281,6 +281,35 @@ class ConfigFileRender_SysCtl(ConfigFileRender):
         return super().render(value)
 
 
+class ConfigFileRender_Ini(ConfigFileRender):
+    """
+    Renderer that outputs a INI file.
+    """
+    separator: str
+
+    def __init__(self, separator: str = '.'):
+        self.separator = separator
+
+    def render_dict(self, value: Mapping) -> str:
+        ret = []
+        for sname, svalue in value.items():
+            ret.append('[{}]'.format(sname))
+            for dname, dvalue in dict_flatten(svalue, sep=self.separator).items():
+                ret.append('{} = {}'.format(dname, str(dvalue)))
+        return '\n'.join(ret)
+
+    def supports(self, value: ConfigFileOutput) -> bool:
+        if isinstance(value, ConfigFileOutput_DictDualLevel) or \
+           isinstance(value, ConfigFileOutput_Dict):
+            return True
+        return super().supports(value)
+
+    def render(self, value: ConfigFileOutput) -> str:
+        if self.supports(value):
+            return self.render_dict(DataClean(value.value, in_place=False))
+        return super().render(value)
+
+
 class ConfigFileRender_Yaml(ConfigFileRender):
     """
     Renderer that outputs a YAML file.
