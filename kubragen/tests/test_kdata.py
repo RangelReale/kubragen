@@ -1,6 +1,6 @@
 import unittest
 
-from kubragen.kdata import KData_ConfigMap
+from kubragen.kdata import KData_ConfigMap, KData_ConfigMapManual, KData_Secret, KData_SecretManual
 from kubragen.kdatahelper import KDataHelper_Env, KDataHelper_Volume
 
 
@@ -173,6 +173,33 @@ class TestKData(unittest.TestCase):
             }
         })
 
+    def test_helper_volume_configmap_manual(self):
+        kdata = KDataHelper_Volume.info(base_value={
+            'name': 'data-volume',
+        }, value=KData_ConfigMapManual(configmapName='mycm', merge_config={
+            'configMap': {
+                'items': [{
+                    'key': 'xcmdata',
+                    'path': 'xcmdata',
+                }],
+            },
+        }), default_value={
+            'persistentVolumeClaim': {
+                'claimName': 'bt-storage-claim'
+            }
+        })
+
+        self.assertEqual(kdata, {
+            'name': 'data-volume',
+            'configMap': {
+                'name': 'mycm',
+                'items': [{
+                    'key': 'xcmdata',
+                    'path': 'xcmdata',
+                }],
+            }
+        })
+
     def test_helper_volume_kdata_notkdata(self):
         kdata = KDataHelper_Volume.info(base_value={
             'name': 'data-volume',
@@ -185,5 +212,50 @@ class TestKData(unittest.TestCase):
             'name': 'data-volume',
             'persistentVolumeClaim': {
                 'claimName': 'bt-storage-claim'
+            }
+        })
+
+    def test_helper_volume_secret(self):
+        kdata = KDataHelper_Volume.info(base_value={
+            'name': 'data-volume',
+        }, value=KData_Secret(secretName='mycm', secretData='cmdata'), default_value={
+            'persistentVolumeClaim': {
+                'claimName': 'bt-storage-claim'
+            }
+        })
+        self.assertEqual(kdata, {
+            'name': 'data-volume',
+            'secret': {
+                'secretName': 'mycm',
+                'items': [{
+                    'key': 'cmdata',
+                    'path': 'cmdata',
+                }],
+            }
+        })
+
+    def test_helper_volume_secret_manual(self):
+        kdata = KDataHelper_Volume.info(base_value={
+            'name': 'data-volume',
+        }, value=KData_SecretManual(secretName='mycm', merge_config={
+            'secret': {
+                'items': [{
+                    'key': 'xcmdata',
+                    'path': 'xcmdata',
+                }],
+            },
+        }), default_value={
+            'persistentVolumeClaim': {
+                'claimName': 'bt-storage-claim'
+            }
+        })
+        self.assertEqual(kdata, {
+            'name': 'data-volume',
+            'secret': {
+                'secretName': 'mycm',
+                'items': [{
+                    'key': 'xcmdata',
+                    'path': 'xcmdata',
+                }],
             }
         })

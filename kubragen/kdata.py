@@ -1,4 +1,4 @@
-from typing import Any, Sequence
+from typing import Any, Sequence, Optional, Mapping
 
 from .exception import InvalidParamError
 
@@ -42,7 +42,7 @@ class KData_Value(KData):
 
 class KData_ConfigMap(KData):
     """
-    A :class:`KData` that represents a Kubernetes ConfigMap.
+    A :class:`KData` that represents a Kubernetes ConfigMap item.
 
     :param configmapName: ConfigMap name
     :param configmapData: ConfigMap data name
@@ -55,9 +55,24 @@ class KData_ConfigMap(KData):
         self.configmapData = configmapData
 
 
+class KData_ConfigMapManual(KData):
+    """
+    A :class:`KData` that represents a Kubernetes ConfigMap.
+
+    :param configmapName: ConfigMap name
+    :param merge_config: A Mapping to merge on the result.
+    """
+    configmapName: str
+    merge_config: Optional[Mapping[Any, Any]]
+
+    def __init__(self, configmapName: str, merge_config: Optional[Mapping[Any, Any]] = None):
+        self.configmapName = configmapName
+        self.merge_config = merge_config
+
+
 class KData_Secret(KData):
     """
-    A :class:`KData` that represents a Kubernetes Secret.
+    A :class:`KData` that represents a Kubernetes Secret item.
 
     :param secretName: Secret name
     :param secretData: Secret data name
@@ -68,3 +83,18 @@ class KData_Secret(KData):
     def __init__(self, secretName: str, secretData: str):
         self.secretName = secretName
         self.secretData = secretData
+
+
+class KData_SecretManual(KData):
+    """
+    A :class:`KData` that represents a Kubernetes Secret.
+
+    :param secretName: Secret name
+    :param merge_config: A Mapping to merge on the result.
+    """
+    secretName: str
+    merge_config: Optional[Mapping[Any, Any]]
+
+    def __init__(self, secretName: str, merge_config: Optional[Mapping[Any, Any]] = None):
+        self.secretName = secretName
+        self.merge_config = merge_config

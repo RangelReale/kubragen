@@ -3,7 +3,7 @@ from typing import Optional, Any, Sequence, Mapping
 from .data import ValueData, DisabledData
 from .exception import InvalidParamError
 from .helper import QuotedStr
-from .kdata import KData_Secret, KData_Value, KData_ConfigMap, KData
+from .kdata import KData_Secret, KData_Value, KData_ConfigMap, KData, KData_ConfigMapManual, KData_SecretManual
 from .merger import Merger
 
 
@@ -102,7 +102,7 @@ class KDataHelper_Volume(KDataHelper):
     @staticmethod
     def allowed_kdata() -> Sequence[Any]:
         """Returns the allowed  list of :class:`KData`"""
-        return [KData_Value, KData_ConfigMap, KData_Secret]
+        return [KData_Value, KData_ConfigMap, KData_ConfigMapManual, KData_Secret, KData_SecretManual]
 
     @staticmethod
     def info(base_value, value: Optional[Any] = None, value_if_kdata: Optional[Any] = None,
@@ -151,6 +151,12 @@ class KDataHelper_Volume(KDataHelper):
                         }],
                     }
                 }
+            elif isinstance(value, KData_ConfigMapManual):
+                default_value = Merger.merge({
+                    'configMap': {
+                        'name': value.configmapName,
+                    }
+                }, value.merge_config if value.merge_config is not None else {})
             elif isinstance(value, KData_Secret):
                 default_value = {
                     'secret': {
@@ -161,6 +167,12 @@ class KDataHelper_Volume(KDataHelper):
                         }],
                     }
                 }
+            elif isinstance(value, KData_SecretManual):
+                default_value = Merger.merge({
+                    'secret': {
+                        'secretName': value.secretName,
+                    }
+                }, value.merge_config if value.merge_config is not None else {})
             else:
                 raise InvalidParamError('Unsupported KData: "{}"'.format(repr(value)))
         elif value is not None:
