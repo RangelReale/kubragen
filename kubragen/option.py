@@ -115,10 +115,10 @@ class OptionValueCallable(OptionValue):
     """
     Use a callable to get the option value.
     """
-    valuefunc: Callable[[Optional[str], Optional[Option]], Any]
+    # _valuefunc: Callable[[Optional[str], Optional[Option]], Any]
 
     def __init__(self, valuefunc: Callable[[Optional[str], Optional[Option]], Any]):
-        self.valuefunc = valuefunc
+        self._valuefunc = valuefunc
 
     def get_value(self, name: Optional[str] = None, base_option: Optional[Option] = None) -> Any:
-        return self.valuefunc(name, base_option)
+        return self._valuefunc(name, base_option)

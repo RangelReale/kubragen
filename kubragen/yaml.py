@@ -1,4 +1,4 @@
-from typing import Optional
+from typing import Optional, Dict, Any
 
 import yaml
 
@@ -123,7 +123,7 @@ class YamlGenerator:
         :param data: source objects
         :return: YAML document text
         """
-        yaml_dump_params = {'default_flow_style': None, 'sort_keys': False}
+        yaml_dump_params: Dict[Any, Any] = {'default_flow_style': None, 'sort_keys': False}
         if isinstance(data, list):
             return yaml.dump_all(data, Dumper=YamlDumper(self.kg), **yaml_dump_params)
         return yaml.dump(data, Dumper=YamlDumper(self.kg), **yaml_dump_params)

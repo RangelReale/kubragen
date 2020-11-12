@@ -1,9 +1,5 @@
 from typing import Union, Optional, Any, Sequence
 
-import semver
-
-from .consts import DEFAULT_KUBERNETES_VERSION
-from .exception import InvalidParamError
 from .kresource import KResourceDatabase
 from .object import ObjectItem
 from .options import Options, option_root_get, OptionsBase

@@ -1,7 +1,7 @@
 import base64
 from typing import Union, Sequence, Optional
 
-import semver
+import semver # type: ignore
 
 from .consts import PROVIDER_GENERIC, PROVIDERSVC_GENERIC, DEFAULT_KUBERNETES_VERSION
 from .exception import InvalidParamError

@@ -1,4 +1,4 @@
-from typing import Any, Optional, Tuple, Protocol
+from typing import Any, Optional, Tuple, Protocol, List
 
 from .data import Data, DataClean
 from .exception import OptionError
@@ -108,7 +108,7 @@ def option_root_get(options: OptionsBase, name: str, root_options: Optional[Opti
                 if definition.allowed_types is None or (value is None and definition.required):
                     raise TypeError('Option "{}" is required'.format(name))
 
-                tprint = []
+                tprint: List[Any] = []
                 if not definition.required:
                     tprint.append(None)
                 tprint.extend(definition.allowed_types)

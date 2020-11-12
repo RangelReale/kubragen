@@ -1,4 +1,4 @@
-from typing import Mapping, Any, Sequence, Optional, MutableMapping
+from typing import Mapping, Any, Sequence, Optional, MutableMapping, List
 
 from .exception import OptionError
 
@@ -37,7 +37,7 @@ def dict_flatten(d, parent_key='', sep='.') -> Mapping:
     """
     Flatten a dict to a single level.
     """
-    items = []
+    items: List[Any] = []
     for k, v in d.items():
         new_key = parent_key + sep + k if parent_key else k
         if isinstance(v, MutableMapping):

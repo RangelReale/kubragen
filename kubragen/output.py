@@ -222,7 +222,7 @@ class OutputFile_Yaml(OutputFile):
     def to_string(self, dumper: OutputDataDumper) -> str:
         if self.data is None:
             return ''
-        yaml_dump_params = {'default_flow_style': False, 'sort_keys': False}
+        yaml_dump_params: Dict[Any, Any] = {'default_flow_style': False, 'sort_keys': False}
         ret = []
         is_first: bool = True
         for d in self.data:

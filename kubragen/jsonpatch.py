@@ -1,6 +1,6 @@
 from typing import Any, Optional, Union, Sequence, Dict, Mapping, Callable
 
-from jsonpatch import InvalidJsonPatch
+from jsonpatch import InvalidJsonPatch # type: ignore
 
 from .exception import InvalidJsonPatchError, InvalidParamError
 from .object import ObjectItem, Object

@@ -1,4 +1,4 @@
-from typing import Any, Sequence, Mapping, Optional, List
+from typing import Any, Sequence, Mapping, Optional, List, Dict
 
 import yaml
 
@@ -287,7 +287,7 @@ class ConfigFileRender_Yaml(ConfigFileRender):
     Renderer that outputs a YAML file.
     """
     def render_yaml(self, value: Any) -> str:
-        yaml_dump_params = {'default_flow_style': None, 'sort_keys': False}
+        yaml_dump_params: Dict[Any, Any] = {'default_flow_style': None, 'sort_keys': False}
         if isinstance(value, list):
             return yaml.dump_all(value, Dumper=YamlDumperBase, **yaml_dump_params)
         return yaml.dump(value, Dumper=YamlDumperBase, **yaml_dump_params)

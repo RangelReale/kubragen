@@ -1,4 +1,4 @@
-from typing import TypeVar, Sequence, Any, Mapping, Dict
+from typing import TypeVar, Sequence, Any, Mapping, Dict, List
 
 from .exception import KGException, InvalidNameError, NotFoundError, InvalidOperationError
 from .jsonpatch import FilterJSONPatches, FilterJSONPatches_Apply
@@ -33,7 +33,7 @@ class Builder:
         """
         raise NotImplementedError()
 
-    def jsonpatches(self, patches: FilterJSONPatches = None) -> BuilderT:
+    def jsonpatches(self: BuilderT, patches: FilterJSONPatches = None) -> BuilderT:
         self._jsonpatches = patches
         return self
 
@@ -45,11 +45,11 @@ class Builder:
     def object_names(self) -> Mapping[str, str]:
         return self._objectnames
 
-    def object_names_init(self, names: Mapping[str, str]) -> BuilderT:
+    def object_names_init(self: BuilderT, names: Mapping[str, str]) -> BuilderT:
         self._objectnames.update(names)
         return self
 
-    def object_names_change(self, names: Mapping[str, str]) -> BuilderT:
+    def object_names_change(self: BuilderT, names: Mapping[str, str]) -> BuilderT:
         for name, value in names.items():
             if name not in self._objectnames:
                 raise InvalidNameError('Unknown object name "{}"'.format(name))
@@ -79,7 +79,7 @@ class Builder:
             raise InvalidOperationError('Missing required build names')
 
     def build(self, *buildnames: TBuild) -> Sequence[ObjectItem]:
-        ret = []
+        ret: List[ObjectItem] = []
         for b in buildnames:
             if b not in self.build_names():
                 raise KGException('Unknown build name: "{}"'.format(b))

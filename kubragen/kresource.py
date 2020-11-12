@@ -213,7 +213,7 @@ class KRPersistentVolumeProfile_Default(KRPersistentVolumeProfile):
     """
     def build(self, provider: Provider, resources: 'KResourceDatabase', name: str,
               config: Optional[Any], merge_config: Optional[Any]) -> ObjectItem:
-        pvdata = {
+        pvdata: Dict[Any, Any] = {
             'apiVersion': 'v1',
             'kind': 'PersistentVolume',
             'metadata': {
@@ -237,7 +237,7 @@ class KRPersistentVolumeProfile_EmptyDir(KRPersistentVolumeProfile):
     """
     def build(self, provider: Provider, resources: 'KResourceDatabase', name: str,
               config: Optional[Any], merge_config: Optional[Any]) -> ObjectItem:
-        pvdata = {
+        pvdata: Dict[Any, Any] = {
             'apiVersion': 'v1',
             'kind': 'PersistentVolume',
             'metadata': {
@@ -262,7 +262,7 @@ class KRPersistentVolumeProfile_HostPath(KRPersistentVolumeProfile):
     """
     def build(self, provider: Provider, resources: 'KResourceDatabase', name: str,
               config: Optional[Any], merge_config: Optional[Any]) -> ObjectItem:
-        pvdata = {
+        pvdata: Dict[Any, Any] = {
             'apiVersion': 'v1',
             'kind': 'PersistentVolume',
             'metadata': {
@@ -295,7 +295,7 @@ class KRPersistentVolumeProfile_NFS(KRPersistentVolumeProfile):
     """
     def build(self, provider: Provider, resources: 'KResourceDatabase', name: str,
               config: Optional[Any], merge_config: Optional[Any]) -> ObjectItem:
-        pvdata = {
+        pvdata: Dict[Any, Any] = {
             'apiVersion': 'v1',
             'kind': 'PersistentVolume',
             'metadata': {
@@ -327,7 +327,7 @@ class KRPersistentVolumeProfile_CSI(KRPersistentVolumeProfile):
     """
     def build(self, provider: Provider, resources: 'KResourceDatabase', name: str,
               config: Optional[Any], merge_config: Optional[Any]) -> ObjectItem:
-        pvdata = {
+        pvdata: Dict[Any, Any] = {
             'apiVersion': 'v1',
             'kind': 'PersistentVolume',
             'metadata': {
@@ -359,7 +359,7 @@ class KRPersistentVolumeClaimProfile_Default(KRPersistentVolumeClaimProfile):
     """
     def build(self, provider: Provider, resources: 'KResourceDatabase', name: str,
               config: Optional[Any], merge_config: Optional[Any]) -> ObjectItem:
-        pvcdata = {
+        pvcdata: Dict[Any, Any] = {
             'apiVersion': 'v1',
             'kind': 'PersistentVolumeClaim',
             'metadata': {
@@ -393,7 +393,7 @@ class KRPersistentVolumeClaimProfile_Basic(KRPersistentVolumeClaimProfile):
 
     def build(self, provider: Provider, resources: 'KResourceDatabase', name: str,
               config: Optional[Any], merge_config: Optional[Any]) -> ObjectItem:
-        pvcdata = {
+        pvcdata: Dict[Any, Any] = {
             'apiVersion': 'v1',
             'kind': 'PersistentVolumeClaim',
             'metadata': {
